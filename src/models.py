@@ -30,7 +30,9 @@ class JobSource(StrEnum):
     NVISO = "nviso"
     ITSME = "itsme"
     EASI = "easi"
-    # Étendu en Sprint 2+
+    SMALS = "smals"
+    CREAM = "cream"
+    # Étendu en Sprint 3+
     OTHER = "other"
 
 

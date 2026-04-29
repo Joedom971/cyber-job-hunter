@@ -10,10 +10,12 @@ from collections.abc import Callable
 
 from src.config import SourceConfig
 from src.scrapers.base import BaseScraper
+from src.scrapers.cream import CreamScraper
 from src.scrapers.easi import EasiScraper
 from src.scrapers.nviso import NvisoScraper
 from src.scrapers.recruitee import build_itsme_scraper
 from src.scrapers.remotive import RemotiveScraper
+from src.scrapers.smals import SmalsScraper
 
 ScraperFactory = Callable[..., BaseScraper]
 
@@ -22,6 +24,8 @@ SCRAPER_FACTORIES: dict[str, ScraperFactory] = {
     "nviso": NvisoScraper,        # HTML statique depuis avril 2026 (l'API Recruitee est morte)
     "itsme": build_itsme_scraper,
     "easi": EasiScraper,
+    "smals": SmalsScraper,        # Sprint 2 — ICT sécurité sociale BE
+    "cream": CreamScraper,        # Sprint 2 — ESN cyber LU (ex-Cream Consulting)
 }
 
 

@@ -28,8 +28,9 @@ def no_sleep(monkeypatch):
 # ─── Registry ────────────────────────────────────────────────────────────
 
 
-def test_registry_contains_all_sprint1_sources():
-    assert set(SCRAPER_FACTORIES.keys()) == {"remotive", "nviso", "itsme", "easi"}
+def test_registry_contains_all_active_sources():
+    expected = {"remotive", "nviso", "itsme", "easi", "smals", "cream"}
+    assert set(SCRAPER_FACTORIES.keys()) == expected
 
 
 def test_available_sources_sorted():
@@ -96,6 +97,12 @@ def test_run_scrape_full_e2e(tmp_path: Path):
             </body></html>
             """,
         )
+    )
+    respx.get("https://www.smals.be/en/jobs/list").mock(
+        return_value=httpx.Response(200, text="<html></html>")
+    )
+    respx.get("https://www.creamconsulting.com/jobs").mock(
+        return_value=httpx.Response(200, text="<html></html>")
     )
 
     db_path = tmp_path / "e2e.db"

@@ -52,6 +52,22 @@ sources:
     country_default: BE
     notes: "ESN BE, IT/cyber, careers HTML statique"
 
+  smals:
+    enabled: true
+    type: html
+    base_url: https://www.smals.be/en/jobs/list
+    company_name_override: Smals
+    country_default: BE
+    notes: "ICT sécurité sociale BE — Drupal SSR, ~25-30 offres toutes catégories"
+
+  cream:
+    enabled: true
+    type: html
+    base_url: https://www.creamconsulting.com/jobs
+    company_name_override: "Cream by Audensiel"
+    country_default: LU
+    notes: "ESN cyber LU. Ex-Cream Consulting, rebrand Audensiel."
+
 # ─── Sprint 2+ — planifiés (désactivés) ────────────────────────────────
 planned_sources:
 
@@ -64,31 +80,37 @@ planned_sources:
   ccb:
     type: html
     base_url: https://ccb.belgium.be/jobs
-    notes: "Centre for Cybersecurity Belgium"
-    sprint: 2
+    notes: "Page informative, pas de jobs propres — redirige vers EGov Select & Federal Gov"
+    sprint: skip
 
-  cream_audensiel:
+  egov_select:
     type: html
-    base_url: https://www.creamconsulting.com/
-    notes: "Rebrand de Cream Consulting BE → Cream by Audensiel"
-    sprint: 2
+    base_url: https://egovselect.be/
+    notes: "403 anti-bot sur tous les paths au recon 2026-04 — reporté Sprint 3+"
+    sprint: 3
 
   cybersecurity_lu:
     type: spa_react
     base_url: https://cybersecurity.lu/
-    notes: "SPA React, à inspecter manuellement (devtools network) pour trouver l'API XHR"
-    sprint: 2
+    notes: "SPA React. Endpoints /api/* renvoient le shell HTML, pas de JSON public — devtools manuel requis"
+    sprint: 3
 
   cert_eu:
     type: html
     base_url: https://cert.europa.eu/careers
     notes: "Pertinent Blue Team mais clearance EU SECRET requise pour la plupart"
-    sprint: 2
+    sprint: 3
 
   spotit:
     type: html_cloudflare
     base_url: https://www.spotit.be/jobs
     notes: "Protégé Cloudflare — Playwright stealth requis"
+    sprint: 3
+
+  moovijob:
+    type: html_cloudflare
+    base_url: https://www.moovijob.com/en/jobs
+    notes: "Protégé Cloudflare (challenge JS) — Playwright stealth requis"
     sprint: 3
 
   proximus:
