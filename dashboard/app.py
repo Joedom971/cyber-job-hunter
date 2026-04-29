@@ -12,7 +12,6 @@ from pathlib import Path
 # Permet d'importer src.* sans installer le package
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-import pandas as pd
 import streamlit as st
 
 from dashboard.data import (
@@ -25,13 +24,10 @@ from dashboard.data import (
     open_repo,
     sort_rows,
 )
-from dashboard.format import (
-    country_flag,
-    humanize_age,
-    score_color,
-    source_emoji,
-    truncate,
-)
+from dashboard.format import country_flag, source_emoji
+from dashboard.views import detail as view_detail
+from dashboard.views import listing as view_listing
+from dashboard.views import stats as view_stats
 from src.config import load_profile
 
 # ─── Page config ─────────────────────────────────────────────────────────
@@ -210,87 +206,6 @@ def render_sidebar(all_rows: list[JobRow]) -> dict:  # type: ignore[type-arg]
     }
 
 
-# ─── Main view ───────────────────────────────────────────────────────────
-
-
-def render_main(filtered_rows: list[JobRow], total: int) -> None:
-    st.markdown("# 🎯 Offres cyber junior — Liste")
-    st.caption(f"{len(filtered_rows)} / {total} offres affichées après filtres")
-
-    if not filtered_rows:
-        st.info("Aucune offre ne correspond aux filtres. Ajuste la sidebar.")
-        return
-
-    # Construit un DataFrame pour st.dataframe (tri natif, scrollable)
-    df = pd.DataFrame(
-        [
-            {
-                "Score": r.score,
-                "Source": f"{source_emoji(r.source)} {r.source}",
-                "Pays": f"{country_flag(r.country)} {r.country}",
-                "Titre": truncate(r.title, 70),
-                "Société": truncate(r.company, 25),
-                "Localisation": r.location or "-",
-                "Découvert": humanize_age(r.first_seen_at),
-                "URL": r.url,
-            }
-            for r in filtered_rows
-        ]
-    )
-
-    st.dataframe(
-        df,
-        use_container_width=True,
-        hide_index=True,
-        height=min(800, 100 + 35 * len(df)),
-        column_config={
-            "Score": st.column_config.ProgressColumn(
-                "Score",
-                min_value=0,
-                max_value=100,
-                format="%d",
-                width="small",
-            ),
-            "URL": st.column_config.LinkColumn(
-                "Lien",
-                display_text="↗ ouvrir",
-                width="small",
-            ),
-            "Titre": st.column_config.TextColumn(width="large"),
-            "Société": st.column_config.TextColumn(width="small"),
-            "Découvert": st.column_config.TextColumn(width="small"),
-        },
-    )
-
-    # Top 5 mis en avant en cartes au-dessus du tableau, plus visuel pour pitch portfolio
-    if len(filtered_rows) >= 1:
-        st.markdown("### 🏆 Top des offres affichées")
-        top5 = filtered_rows[:5]
-        cols = st.columns(min(5, len(top5)))
-        for col, row in zip(cols, top5, strict=False):
-            fg, bg = score_color(row.score)
-            with col:
-                st.markdown(
-                    f"""
-                    <div style="background:{bg};border-radius:10px;padding:14px;height:100%;">
-                      <div style="font-size:28px;font-weight:800;color:{fg};">{row.score}</div>
-                      <div style="font-size:13px;font-weight:600;margin-top:4px;color:#222;">
-                        {truncate(row.title, 50)}
-                      </div>
-                      <div style="font-size:12px;color:#555;margin-top:4px;">
-                        {source_emoji(row.source)} {row.company} · {country_flag(row.country)} {row.location or "-"}
-                      </div>
-                      <div style="margin-top:8px;">
-                        <a href="{row.url}" target="_blank" style="font-size:12px;color:#0d6efd;">
-                          ↗ ouvrir l'offre
-                        </a>
-                      </div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
-
-
 # ─── Main ────────────────────────────────────────────────────────────────
 
 
@@ -327,7 +242,17 @@ def main() -> None:
         profile=profile,
     )
     sorted_rows = sort_rows(filtered, by=filters["sort_by"])
-    render_main(sorted_rows, total=len(all_rows))
+
+    st.markdown("# 🎯 Cyber Job Hunter")
+    tab_listing, tab_detail, tab_stats = st.tabs(
+        ["📋 Liste", "🔎 Détail", "📊 Stats"]
+    )
+    with tab_listing:
+        view_listing.render(sorted_rows, total=len(all_rows))
+    with tab_detail:
+        view_detail.render(sorted_rows)
+    with tab_stats:
+        view_stats.render(sorted_rows, all_rows)
 
 
 if __name__ == "__main__":

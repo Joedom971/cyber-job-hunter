@@ -44,14 +44,19 @@ def _row(
     title: str = "SOC Junior", company: str = "ACME", location: str = "Brussels",
     is_rejected: bool = False, is_active: bool = True, days_old: int = 0,
     matched_keywords: list[str] | None = None,
+    description: str = "",
+    breakdown: list[dict] | None = None,
 ) -> JobRow:
     base = datetime.now(timezone.utc) - timedelta(days=days_old)
     return JobRow(
         id=1, source=source, company=company, title=title,
         location=location, country=country, url="https://x.test/j",
+        description=description,
         score=score, is_rejected=is_rejected, is_active=is_active,
         rejection_reasons=[],
         matched_keywords=matched_keywords or [],
+        breakdown=breakdown or [],
+        raw_data={},
         first_seen_at=base, last_seen_at=base, scraped_at=base, posted_at=None,
     )
 

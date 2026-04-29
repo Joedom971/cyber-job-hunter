@@ -27,11 +27,14 @@ class JobRow:
     location: str
     country: str
     url: str
+    description: str
     score: int
     is_rejected: bool
     is_active: bool
     rejection_reasons: list[str]
     matched_keywords: list[str]
+    breakdown: list[dict]
+    raw_data: dict
     first_seen_at: datetime
     last_seen_at: datetime
     scraped_at: datetime
@@ -80,6 +83,7 @@ def load_all_jobs_with_latest_score(repo: JobRepository) -> list[JobRow]:
                 location=job.location or "",
                 country=_enum_str(job.country),
                 url=job.url,
+                description=job.description or "",
                 score=sr.score if sr else 0,
                 is_rejected=sr.is_rejected if sr else False,
                 is_active=job.is_active,
@@ -87,6 +91,8 @@ def load_all_jobs_with_latest_score(repo: JobRepository) -> list[JobRow]:
                     _enum_str(r) for r in (sr.rejection_reasons if sr else [])
                 ],
                 matched_keywords=list(sr.matched_keywords) if sr else [],
+                breakdown=list(sr.breakdown) if sr else [],
+                raw_data=dict(job.raw_data) if job.raw_data else {},
                 first_seen_at=job.first_seen_at,
                 last_seen_at=job.last_seen_at,
                 scraped_at=job.scraped_at,
