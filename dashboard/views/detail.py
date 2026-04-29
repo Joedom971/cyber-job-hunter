@@ -90,6 +90,120 @@ def _render_keyword_chips(keywords: list[str]) -> str:
     return "<div>" + "".join(chips) + "</div>"
 
 
+# ─── Score breakdown rendering ───────────────────────────────────────────
+
+
+# Mapping rule_id → (icon, label_FR, group, color_pos, color_neg)
+_RULE_META: dict[str, tuple[str, str, str, str, str]] = {
+    "target_title":              ("🎯", "Titre cible matché",            "Profil",     "#1f7a3a", "#a02334"),
+    "junior":                    ("🌱", "Niveau junior détecté",         "Profil",     "#1f7a3a", "#a02334"),
+    "graduate":                  ("🎓", "Young Graduate / Stage",        "Profil",     "#1f7a3a", "#a02334"),
+    "tech_keyword":              ("🛠️", "Mot-clé technique",            "Compétences","#0a3d80", "#a02334"),
+    "location_preferred":        ("📍", "Localisation préférée",         "Localisation", "#1f7a3a", "#a02334"),
+    "location_good":             ("📍", "Localisation acceptable",       "Localisation", "#856404", "#a02334"),
+    "location_country_fallback": ("🇧🇪", "Pays cible (fallback)",          "Localisation", "#856404", "#a02334"),
+    "lang_fr_en":                ("🗣️", "FR + EN requis",               "Langues",    "#1f7a3a", "#a02334"),
+    "lang_en_only":              ("🗣️", "Anglais seul",                 "Langues",    "#1f7a3a", "#a02334"),
+    "lang_fr_only":              ("🗣️", "Français seul",                "Langues",    "#1f7a3a", "#a02334"),
+    "lang_nl_nice":              ("🗣️", "NL appréciable (bonus)",       "Langues",    "#1f7a3a", "#a02334"),
+    "penalty_master_mandatory":  ("⚠️", "Master obligatoire",           "Pénalités",  "#1f7a3a", "#a02334"),
+    "penalty_bachelor_required": ("⚠️", "Bachelor requis",              "Pénalités",  "#1f7a3a", "#a02334"),
+    "penalty_3y":                ("⚠️", "Expérience 3+ années",         "Pénalités",  "#1f7a3a", "#a02334"),
+}
+
+_GROUP_ORDER = ("Profil", "Compétences", "Localisation", "Langues", "Pénalités", "Autres")
+_GROUP_ICONS = {
+    "Profil":       "👤",
+    "Compétences":  "🛠️",
+    "Localisation": "🗺️",
+    "Langues":      "🗣️",
+    "Pénalités":    "⚠️",
+    "Autres":       "📌",
+}
+
+
+def _rule_meta(rule_id: str) -> tuple[str, str, str, str, str]:
+    return _RULE_META.get(
+        rule_id, ("📌", rule_id.replace("_", " ").title(), "Autres", "#1f7a3a", "#a02334")
+    )
+
+
+def _render_score_breakdown_html(breakdown: list[dict], final_score: int) -> str:
+    """Rend le breakdown comme cartes groupées par catégorie + barre totale."""
+    # Calcul totaux
+    raw_total = sum(int(it.get("points", 0)) for it in breakdown)
+
+    # Groupage
+    grouped: dict[str, list[dict]] = {g: [] for g in _GROUP_ORDER}
+    for item in breakdown:
+        icon, label, group, _pos, _neg = _rule_meta(item.get("rule", ""))
+        grouped.setdefault(group, []).append({**item, "_icon": icon, "_label": label})
+
+    # Build HTML
+    parts: list[str] = ["<div style='font-family:-apple-system,sans-serif;'>"]
+
+    # Barre de progression principale
+    bar_color = "#1f7a3a" if final_score >= 60 else ("#856404" if final_score >= 30 else "#a02334")
+    parts.append(
+        f"""
+        <div style="background:#f5f5f7;border-radius:10px;padding:14px;margin-bottom:16px;">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;">
+            <span style="font-size:13px;color:#555;font-weight:600;">Score final</span>
+            <span style="font-size:24px;font-weight:800;color:{bar_color};">{final_score}/100</span>
+          </div>
+          <div style="background:#e0e0e0;border-radius:6px;height:8px;overflow:hidden;">
+            <div style="background:{bar_color};width:{final_score}%;height:100%;border-radius:6px;transition:width .4s;"></div>
+          </div>
+          <div style="margin-top:6px;font-size:11px;color:#888;">
+            Somme brute des règles : <b style="color:#222;">{raw_total:+d}</b>
+            {" — clampé dans [0, 100]" if raw_total != final_score else ""}
+          </div>
+        </div>
+        """
+    )
+
+    # Cartes par groupe
+    for group in _GROUP_ORDER:
+        items = grouped.get(group) or []
+        if not items:
+            continue
+        group_icon = _GROUP_ICONS.get(group, "📌")
+        group_total = sum(int(it.get("points", 0)) for it in items)
+        sign_color = "#1f7a3a" if group_total >= 0 else "#a02334"
+        parts.append(
+            f"""
+            <div style="margin-bottom:12px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;
+                          margin-bottom:6px;font-size:13px;font-weight:700;color:#333;">
+                <span>{group_icon} {group}</span>
+                <span style="color:{sign_color};font-weight:800;">{group_total:+d}</span>
+              </div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px;">
+            """
+        )
+        for it in items:
+            points = int(it.get("points", 0))
+            detail = it.get("detail") or ""
+            sign = "+" if points >= 0 else ""
+            color = "#1f7a3a" if points >= 0 else "#a02334"
+            bg = "#d4edda" if points >= 0 else "#f8d7da"
+            parts.append(
+                f"""
+                <div style="background:{bg};border-radius:8px;padding:6px 12px;
+                            display:flex;align-items:center;gap:8px;font-size:12px;">
+                  <span style="font-size:14px;">{it['_icon']}</span>
+                  <span style="color:#222;">{it['_label']}</span>
+                  {f'<span style="color:#666;font-style:italic;">· {detail[:40]}</span>' if detail else ''}
+                  <span style="color:{color};font-weight:800;margin-left:auto;">{sign}{points}</span>
+                </div>
+                """
+            )
+        parts.append("</div></div>")
+
+    parts.append("</div>")
+    return "".join(parts)
+
+
 def _format_description_html(description: str) -> str:
     """Met en forme la description pour un affichage Markdown agréable.
 
@@ -201,28 +315,9 @@ def render(rows: list[JobRow]) -> None:
 
     if job.breakdown:
         st.markdown("### 🧮 Breakdown du score")
-        breakdown_df = pd.DataFrame(
-            [
-                {
-                    "Règle": item.get("rule", ""),
-                    "Points": item.get("points", 0),
-                    "Détail": item.get("detail", ""),
-                }
-                for item in job.breakdown
-            ]
-        )
-        total = breakdown_df["Points"].sum()
-        st.dataframe(
-            breakdown_df,
-            use_container_width=True,
-            hide_index=True,
-            column_config={
-                "Points": st.column_config.NumberColumn(format="%+d"),
-            },
-        )
-        st.caption(
-            f"**Somme : {total:+d}** "
-            f"→ score final clampé à {job.score}/100"
+        st.markdown(
+            _render_score_breakdown_html(job.breakdown, job.score),
+            unsafe_allow_html=True,
         )
     elif job.is_rejected:
         st.warning(
