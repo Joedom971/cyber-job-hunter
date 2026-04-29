@@ -129,37 +129,37 @@ def _rule_meta(rule_id: str) -> tuple[str, str, str, str, str]:
 
 
 def _render_score_breakdown_html(breakdown: list[dict], final_score: int) -> str:
-    """Rend le breakdown comme cartes groupées par catégorie + barre totale."""
-    # Calcul totaux
+    """Rend le breakdown comme cartes groupées par catégorie + barre totale.
+
+    Important : le HTML doit être sur une seule ligne (ou sans indentation
+    par 4+ espaces) sinon Streamlit's markdown l'interprète comme code block.
+    """
     raw_total = sum(int(it.get("points", 0)) for it in breakdown)
 
-    # Groupage
     grouped: dict[str, list[dict]] = {g: [] for g in _GROUP_ORDER}
     for item in breakdown:
         icon, label, group, _pos, _neg = _rule_meta(item.get("rule", ""))
         grouped.setdefault(group, []).append({**item, "_icon": icon, "_label": label})
 
-    # Build HTML
-    parts: list[str] = ["<div style='font-family:-apple-system,sans-serif;'>"]
-
-    # Barre de progression principale
     bar_color = "#1f7a3a" if final_score >= 60 else ("#856404" if final_score >= 30 else "#a02334")
+    parts: list[str] = []
+    parts.append("<div style='font-family:-apple-system,sans-serif;'>")
+
+    # Barre principale (single-line HTML)
+    raw_note = " — clampé dans [0, 100]" if raw_total != final_score else ""
     parts.append(
-        f"""
-        <div style="background:#f5f5f7;border-radius:10px;padding:14px;margin-bottom:16px;">
-          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;">
-            <span style="font-size:13px;color:#555;font-weight:600;">Score final</span>
-            <span style="font-size:24px;font-weight:800;color:{bar_color};">{final_score}/100</span>
-          </div>
-          <div style="background:#e0e0e0;border-radius:6px;height:8px;overflow:hidden;">
-            <div style="background:{bar_color};width:{final_score}%;height:100%;border-radius:6px;transition:width .4s;"></div>
-          </div>
-          <div style="margin-top:6px;font-size:11px;color:#888;">
-            Somme brute des règles : <b style="color:#222;">{raw_total:+d}</b>
-            {" — clampé dans [0, 100]" if raw_total != final_score else ""}
-          </div>
-        </div>
-        """
+        '<div style="background:#f5f5f7;border-radius:10px;padding:14px;margin-bottom:16px;">'
+        '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;">'
+        '<span style="font-size:13px;color:#555;font-weight:600;">Score final</span>'
+        f'<span style="font-size:24px;font-weight:800;color:{bar_color};">{final_score}/100</span>'
+        "</div>"
+        '<div style="background:#e0e0e0;border-radius:6px;height:8px;overflow:hidden;">'
+        f'<div style="background:{bar_color};width:{max(2, final_score)}%;height:100%;border-radius:6px;"></div>'
+        "</div>"
+        '<div style="margin-top:6px;font-size:11px;color:#888;">'
+        f'Somme brute des règles : <b style="color:#222;">{raw_total:+d}</b>{raw_note}'
+        "</div>"
+        "</div>"
     )
 
     # Cartes par groupe
@@ -170,33 +170,33 @@ def _render_score_breakdown_html(breakdown: list[dict], final_score: int) -> str
         group_icon = _GROUP_ICONS.get(group, "📌")
         group_total = sum(int(it.get("points", 0)) for it in items)
         sign_color = "#1f7a3a" if group_total >= 0 else "#a02334"
+
         parts.append(
-            f"""
-            <div style="margin-bottom:12px;">
-              <div style="display:flex;justify-content:space-between;align-items:center;
-                          margin-bottom:6px;font-size:13px;font-weight:700;color:#333;">
-                <span>{group_icon} {group}</span>
-                <span style="color:{sign_color};font-weight:800;">{group_total:+d}</span>
-              </div>
-              <div style="display:flex;flex-wrap:wrap;gap:6px;">
-            """
+            '<div style="margin-bottom:12px;">'
+            '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:13px;font-weight:700;color:#333;">'
+            f"<span>{group_icon} {group}</span>"
+            f'<span style="color:{sign_color};font-weight:800;">{group_total:+d}</span>'
+            "</div>"
+            '<div style="display:flex;flex-wrap:wrap;gap:6px;">'
         )
         for it in items:
             points = int(it.get("points", 0))
-            detail = it.get("detail") or ""
+            detail = (it.get("detail") or "")[:40]
             sign = "+" if points >= 0 else ""
             color = "#1f7a3a" if points >= 0 else "#a02334"
             bg = "#d4edda" if points >= 0 else "#f8d7da"
+            detail_html = (
+                f'<span style="color:#666;font-style:italic;">· {detail}</span>'
+                if detail
+                else ""
+            )
             parts.append(
-                f"""
-                <div style="background:{bg};border-radius:8px;padding:6px 12px;
-                            display:flex;align-items:center;gap:8px;font-size:12px;">
-                  <span style="font-size:14px;">{it['_icon']}</span>
-                  <span style="color:#222;">{it['_label']}</span>
-                  {f'<span style="color:#666;font-style:italic;">· {detail[:40]}</span>' if detail else ''}
-                  <span style="color:{color};font-weight:800;margin-left:auto;">{sign}{points}</span>
-                </div>
-                """
+                f'<div style="background:{bg};border-radius:8px;padding:6px 12px;display:flex;align-items:center;gap:8px;font-size:12px;">'
+                f'<span style="font-size:14px;">{it["_icon"]}</span>'
+                f'<span style="color:#222;">{it["_label"]}</span>'
+                f"{detail_html}"
+                f'<span style="color:{color};font-weight:800;margin-left:auto;">{sign}{points}</span>'
+                "</div>"
             )
         parts.append("</div></div>")
 
@@ -204,54 +204,101 @@ def _render_score_breakdown_html(breakdown: list[dict], final_score: int) -> str
     return "".join(parts)
 
 
+_HEADING_KEYWORDS = {
+    "job description", "position description", "function", "fonction",
+    "your job", "the job", "your role", "the role",
+    "votre mission", "vos missions",
+    "profile", "your profile", "your team", "votre équipe", "votre profil",
+    "qualifications", "requirements", "skills", "compétences", "exigences",
+    "our offer", "what we offer", "notre offre", "nous offrons", "aanbod",
+    "benefits", "avantages", "voordelen",
+    "about accenture", "about us", "about the company", "à propos",
+    "equal opportunity", "diversity", "equal employment",
+    "equal employment opportunity statement",
+}
+
+_TERMINAL_PUNCT = (".", "!", "?", ":", ";")
+
+
 def _format_description_html(description: str) -> str:
-    """Met en forme la description pour un affichage Markdown agréable.
+    """Met en forme la description pour un rendu Markdown lisible.
 
     Heuristiques :
-    - Détecte des sections clés (Description, Profil, Offre, Requirements,
-      Qualifications, Skills, Benefits, About, Your role) et les transforme
-      en h4
-    - Conserve les paragraphes et listes
-    - Échappe le HTML existant pour éviter les injections
+    - Recolle les orphelins (mots courts en minuscule isolés par des <br>
+      dans le HTML d'origine, ex. ``requirements`` ou ``skills``).
+    - Promeut en ``#### Titre`` les lignes courtes en Title Case qui
+      correspondent à un mot-clé de section connu (Your job, Our offer,
+      About Accenture, …).
+    - Convertit les puces ``•`` en bullets Markdown.
     """
-    import html as _html
     import re as _re
 
     if not description:
         return ""
 
-    # Échappe le HTML existant (les descriptions sont déjà HTML-strippées
-    # côté scraping, mais defense in depth)
-    text = _html.escape(description)
+    raw_lines = description.replace("\r\n", "\n").replace("\r", "\n").split("\n")
+    lines = [ln.strip() for ln in raw_lines]
 
-    # Détecte les sections (anglais et français)
-    section_patterns = [
-        r"\b(Job Description|Description|Position description|Function|Fonction)\b",
-        r"\b(Your Job|Your role|Votre mission|Vos missions)\b",
-        r"\b(Profile|Profil|Your Profile|Your team|Votre équipe)\b",
-        r"\b(Qualifications?|Requirements?|Skills?|Compétences|Exigences)\b",
-        r"\b(Our offer|Offer|Notre offre|Nous offrons|Aanbod|Offre)\b",
-        r"\b(Benefits?|Avantages|Voordelen)\b",
-        r"\b(About (?:Accenture|us|the company)|À propos)\b",
-        r"\b(Equal Opportunity|Diversity|Equal Employment)\b",
-    ]
-    for pat in section_patterns:
-        text = _re.sub(
-            f"({pat})\\s*[:.]?",
-            r"\n\n#### \1\n",
-            text,
-            flags=_re.IGNORECASE,
+    def _is_bullet(s: str) -> bool:
+        return s.startswith(("•", "·", "- ", "* "))
+
+    rebuilt: list[str] = []
+    for ln in lines:
+        if not ln:
+            rebuilt.append("")
+            continue
+
+        low = ln.lower().rstrip(":.").strip()
+        is_heading_kw = low in _HEADING_KEYWORDS
+        is_title_case = ln[0].isupper() and len(ln) < 60
+
+        # Vrai titre : mot-clé connu + Title Case
+        if is_heading_kw and is_title_case:
+            if rebuilt and rebuilt[-1]:
+                rebuilt.append("")
+            rebuilt.append(f"#### {ln.rstrip(':.').strip()}")
+            rebuilt.append("")
+            continue
+
+        # Bullet → on ne fusionne jamais avec la phrase précédente
+        if _is_bullet(ln):
+            rebuilt.append(ln)
+            continue
+
+        # Orphelin (mot/phrase courte qui prolonge la phrase précédente)
+        prev_idx = len(rebuilt) - 1
+        while prev_idx >= 0 and not rebuilt[prev_idx]:
+            prev_idx -= 1
+        prev = rebuilt[prev_idx] if prev_idx >= 0 else ""
+        prev_ends_sentence = prev.endswith(_TERMINAL_PUNCT)
+        prev_is_heading = prev.startswith("#### ")
+        prev_is_bullet = _is_bullet(prev)
+        is_short_orphan = (
+            len(ln) < 30
+            and not ln.endswith(_TERMINAL_PUNCT)
+            and (not ln[0].isupper() or is_heading_kw)
         )
 
-    # Convertit les puces 'simples' en bullets markdown si elles existent
-    text = _re.sub(r"\s*•\s*", "\n- ", text)
-    # Liste numérotée si format "1. " "2. "
-    # (déjà géré par markdown)
+        if (
+            prev
+            and not prev_ends_sentence
+            and not prev_is_heading
+            and not prev_is_bullet
+            and is_short_orphan
+        ):
+            rebuilt[prev_idx] = prev + " " + ln
+            del rebuilt[prev_idx + 1 :]
+            continue
 
-    # Préserve les paragraphes : doubles sauts de ligne
+        rebuilt.append(ln)
+
+    text = "\n".join(rebuilt)
+    # Bullets : `• item` ou `· item` → `- item`
+    text = _re.sub(r"^\s*[•·]\s*", "- ", text, flags=_re.MULTILINE)
+    # Resserre les listes : blank line entre deux bullets consécutifs → simple newline
+    text = _re.sub(r"(^- .+)\n\n(?=- )", r"\1\n", text, flags=_re.MULTILINE)
     text = _re.sub(r"\n{3,}", "\n\n", text)
-
-    return text
+    return text.strip()
 
 
 def render(rows: list[JobRow]) -> None:
