@@ -12,11 +12,14 @@ from dashboard.data import (
     JobRow,
     collect_all_matched_keywords,
     compute_stats,
+    filter_new_only,
     filter_rows,
+    get_new_offers_cutoff,
     is_new_since,
     load_all_jobs_with_latest_score,
     sort_rows,
 )
+from src.models import ScrapeRun
 from src.config import load_profile
 from dashboard.format import (
     country_flag,
@@ -345,3 +348,54 @@ def test_is_new_since():
     cutoff = now - timedelta(hours=1)
     assert is_new_since(fresh, cutoff) is True
     assert is_new_since(old, cutoff) is False
+
+
+def test_is_new_since_naive_datetime_safe():
+    """is_new_since gère les datetimes naive sans crasher."""
+    fresh = _row(days_old=0)
+    naive_cutoff = datetime(2020, 1, 1)  # tzinfo None
+    assert is_new_since(fresh, naive_cutoff) is True
+
+
+# ─── Run history & cutoff ────────────────────────────────────────────────
+
+
+def test_get_new_offers_cutoff_no_runs(tmp_path):
+    """0 ou 1 run en DB → None (toutes les offres sont 'nouvelles')."""
+    from src.storage import JobRepository
+
+    repo = JobRepository(db_url=f"sqlite:///{tmp_path / 'a.db'}")
+    repo.create_all()
+    try:
+        assert get_new_offers_cutoff(repo) is None
+        # 1 run only → toujours None
+        repo.save_run(
+            ScrapeRun(started_at=datetime.now(timezone.utc), sources_run=[])
+        )
+        assert get_new_offers_cutoff(repo) is None
+    finally:
+        repo.engine.dispose()
+
+
+def test_get_new_offers_cutoff_uses_previous_run(tmp_path):
+    """Avec 2+ runs, le cutoff = started_at de l'avant-dernier."""
+    from src.storage import JobRepository
+
+    repo = JobRepository(db_url=f"sqlite:///{tmp_path / 'b.db'}")
+    repo.create_all()
+    try:
+        t1 = datetime(2026, 4, 28, 10, 0, tzinfo=timezone.utc)
+        t2 = datetime(2026, 4, 29, 10, 0, tzinfo=timezone.utc)
+        repo.save_run(ScrapeRun(started_at=t1, sources_run=[]))
+        repo.save_run(ScrapeRun(started_at=t2, sources_run=[]))
+        assert get_new_offers_cutoff(repo) == t1  # avant-dernier
+    finally:
+        repo.engine.dispose()
+
+
+def test_filter_new_only():
+    now = datetime.now(timezone.utc)
+    cutoff = now - timedelta(hours=1)
+    rows = [_row(days_old=0), _row(days_old=2)]  # 1 fresh, 1 old
+    assert len(filter_new_only(rows, cutoff)) == 1
+    assert len(filter_new_only(rows, None)) == 2  # None = tout passe

@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+from datetime import datetime
+
 import pandas as pd
 import streamlit as st
 
-from dashboard.data import JobRow
+from dashboard.data import JobRow, is_new_since
 from dashboard.format import (
     country_flag,
     humanize_age,
@@ -15,7 +17,11 @@ from dashboard.format import (
 )
 
 
-def render(filtered_rows: list[JobRow], total: int) -> None:
+def render(
+    filtered_rows: list[JobRow],
+    total: int,
+    new_cutoff: datetime | None = None,
+) -> None:
     st.markdown("## 📋 Offres cyber junior")
     st.caption(f"{len(filtered_rows)} / {total} offres affichées après filtres")
 
@@ -54,6 +60,7 @@ def render(filtered_rows: list[JobRow], total: int) -> None:
     df = pd.DataFrame(
         [
             {
+                "🆕": "🆕" if (new_cutoff and is_new_since(r, new_cutoff)) else "",
                 "Score": r.score,
                 "Source": f"{source_emoji(r.source)} {r.source}",
                 "Pays": f"{country_flag(r.country)} {r.country}",
@@ -73,6 +80,7 @@ def render(filtered_rows: list[JobRow], total: int) -> None:
         hide_index=True,
         height=min(800, 100 + 35 * len(df)),
         column_config={
+            "🆕": st.column_config.TextColumn("🆕", width="small", help="Découverte depuis le run précédent"),
             "Score": st.column_config.ProgressColumn(
                 "Score", min_value=0, max_value=100, format="%d", width="small",
             ),

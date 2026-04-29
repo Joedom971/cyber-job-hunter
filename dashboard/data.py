@@ -234,8 +234,35 @@ def compute_stats(rows: list[JobRow]) -> GlobalStats:
 
 
 def is_new_since(row: JobRow, since: datetime) -> bool:
-    return row.first_seen_at >= since
+    seen_at = row.first_seen_at
+    if seen_at.tzinfo is None:
+        seen_at = seen_at.replace(tzinfo=timezone.utc)
+    if since.tzinfo is None:
+        since = since.replace(tzinfo=timezone.utc)
+    return seen_at >= since
 
 
 def now_utc() -> datetime:
     return datetime.now(timezone.utc)
+
+
+def get_new_offers_cutoff(repo: JobRepository) -> datetime | None:
+    """Datetime à partir duquel une offre est considérée "nouvelle" dans le dashboard.
+
+    Logique : on prend le `started_at` de l'avant-dernier run.
+    Si moins de 2 runs en DB → None (toutes les offres sont "nouvelles").
+    """
+    previous = repo.get_previous_run()
+    if previous is None:
+        return None
+    started = previous.started_at
+    if started.tzinfo is None:
+        started = started.replace(tzinfo=timezone.utc)
+    return started
+
+
+def filter_new_only(rows: list[JobRow], since: datetime | None) -> list[JobRow]:
+    """Garde uniquement les offres `first_seen_at >= since`. None = pas de filtre."""
+    if since is None:
+        return rows
+    return [r for r in rows if is_new_since(r, since)]

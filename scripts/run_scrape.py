@@ -26,6 +26,7 @@ import click
 from loguru import logger
 
 from src.config import load_profile, load_sources
+from src.models import ScrapeRun
 from src.scoring import score_job
 from src.scrapers import SCRAPER_FACTORIES
 from src.storage import JobRepository
@@ -114,6 +115,18 @@ def main(sources_filter: str | None, db_url: str | None, no_score: bool, dry_run
 
     _print_summary(summaries)
     if repo is not None:
+        # Persiste un résumé du run pour la détection "nouvelles offres" (Sprint 2)
+        run_record = ScrapeRun(
+            started_at=run_started,
+            finished_at=datetime.now(timezone.utc),
+            sources_run=[str(s["name"]) for s in summaries],
+            jobs_fetched=sum(int(s["fetched"]) for s in summaries),  # type: ignore[arg-type]
+            jobs_inserted=sum(int(s["inserted"]) for s in summaries),  # type: ignore[arg-type]
+            jobs_updated=sum(int(s["updated"]) for s in summaries),  # type: ignore[arg-type]
+            jobs_marked_inactive=sum(int(s["inactive"]) for s in summaries),  # type: ignore[arg-type]
+            errors_count=sum(int(s["errors"]) for s in summaries),  # type: ignore[arg-type]
+        )
+        repo.save_run(run_record)
         _print_top_jobs(repo, since=run_started, limit=10)
 
 

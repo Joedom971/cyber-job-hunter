@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from src.deduplication import has_content_changed, merge_incoming
-from src.models import Country, Job, JobBase, JobSource, ScoreResult
+from src.models import Country, Job, JobBase, JobSource, ScoreResult, ScrapeRun
 from src.storage import JobRepository
 
 
@@ -235,3 +235,55 @@ def test_export_csv_filter_min_score(repo: JobRepository, tmp_path: Path):
     out = tmp_path / "out.csv"
     n = repo.export_csv(out, min_score=60)
     assert n == 1
+
+
+# ─── ScrapeRun history ───────────────────────────────────────────────────
+
+
+def test_save_run_and_count(repo: JobRepository):
+    assert repo.count_runs() == 0
+    from datetime import datetime, timezone
+
+    repo.save_run(
+        ScrapeRun(started_at=datetime.now(timezone.utc), sources_run=["nviso"])
+    )
+    assert repo.count_runs() == 1
+
+
+def test_get_latest_run_returns_most_recent(repo: JobRepository):
+    from datetime import datetime, timezone
+
+    t1 = datetime(2026, 4, 28, 10, 0, tzinfo=timezone.utc)
+    t2 = datetime(2026, 4, 29, 10, 0, tzinfo=timezone.utc)
+    repo.save_run(ScrapeRun(started_at=t1, sources_run=[]))
+    repo.save_run(ScrapeRun(started_at=t2, sources_run=[]))
+    latest = repo.get_latest_run()
+    assert latest is not None
+    # SQLite SQLModel renvoie des datetimes naive — comparaison sur date/heure brute
+    assert latest.started_at.replace(tzinfo=timezone.utc) == t2
+
+
+def test_get_previous_run_returns_second_latest(repo: JobRepository):
+    from datetime import datetime, timezone
+
+    t1 = datetime(2026, 4, 28, 10, 0, tzinfo=timezone.utc)
+    t2 = datetime(2026, 4, 29, 10, 0, tzinfo=timezone.utc)
+    repo.save_run(ScrapeRun(started_at=t1, sources_run=[]))
+    repo.save_run(ScrapeRun(started_at=t2, sources_run=[]))
+    previous = repo.get_previous_run()
+    assert previous is not None
+    assert previous.started_at.replace(tzinfo=timezone.utc) == t1
+
+
+def test_get_previous_run_none_with_single_run(repo: JobRepository):
+    from datetime import datetime, timezone
+
+    repo.save_run(
+        ScrapeRun(started_at=datetime.now(timezone.utc), sources_run=[])
+    )
+    assert repo.get_previous_run() is None
+
+
+def test_get_previous_run_none_when_empty(repo: JobRepository):
+    assert repo.get_previous_run() is None
+    assert repo.get_latest_run() is None

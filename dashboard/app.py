@@ -20,6 +20,8 @@ from dashboard.data import (
     collect_all_matched_keywords,
     compute_stats,
     filter_rows,
+    get_new_offers_cutoff,
+    is_new_since,
     load_all_jobs_with_latest_score,
     open_repo,
     sort_rows,
@@ -50,6 +52,12 @@ def _load_rows() -> list[JobRow]:
     return load_all_jobs_with_latest_score(repo)
 
 
+@st.cache_data(ttl=60)
+def _load_new_cutoff():  # type: ignore[no-untyped-def]
+    """Datetime du run précédent (référence pour le badge 'Nouveau')."""
+    return get_new_offers_cutoff(open_repo())
+
+
 @st.cache_resource
 def _load_profile():  # type: ignore[no-untyped-def]
     """Charge le profil depuis profile.yaml une seule fois."""
@@ -70,6 +78,7 @@ _FILTER_KEYS = (
     "flt_discovered_days",
     "flt_keywords",
     "flt_categories",
+    "flt_new_only",
 )
 
 
@@ -89,9 +98,15 @@ _DISCOVERED_OPTIONS = {
 }
 
 
-def render_sidebar(all_rows: list[JobRow]) -> dict:  # type: ignore[type-arg]
+def render_sidebar(all_rows: list[JobRow], new_cutoff) -> dict:  # type: ignore[type-arg, no-untyped-def]
     st.sidebar.markdown("## 🎯 Cyber Job Hunter")
     st.sidebar.caption("Veille auto · Sprint 2")
+
+    # Badge "nouvelles offres" — visible si on a au moins 2 runs en DB
+    if new_cutoff is not None:
+        new_count = sum(1 for r in all_rows if is_new_since(r, new_cutoff))
+        if new_count > 0:
+            st.sidebar.success(f"🆕 {new_count} nouvelles depuis le run précédent")
 
     c_refresh, c_reset = st.sidebar.columns(2)
     if c_refresh.button("🔄 Refresh", use_container_width=True):
@@ -179,6 +194,13 @@ def render_sidebar(all_rows: list[JobRow]) -> dict:  # type: ignore[type-arg]
 
     only_active = st.sidebar.checkbox("Actives uniquement", value=True, key="flt_only_active")
     hide_rejected = st.sidebar.checkbox("Masquer les rejets", value=True, key="flt_hide_rejected")
+    new_only = st.sidebar.checkbox(
+        "🆕 Uniquement les nouvelles",
+        value=False,
+        key="flt_new_only",
+        help="Garde les offres découvertes après le run précédent",
+        disabled=new_cutoff is None,
+    )
 
     search = st.sidebar.text_input("🔎 Recherche titre/société", "", key="flt_search")
 
@@ -203,6 +225,7 @@ def render_sidebar(all_rows: list[JobRow]) -> dict:  # type: ignore[type-arg]
         "discovered_days": discovered_days,
         "matched_keywords": keywords,
         "categories": categories,
+        "new_only": new_only,
     }
 
 
@@ -225,7 +248,8 @@ def main() -> None:
         st.code("python scripts/run_scrape.py", language="bash")
         return
 
-    filters = render_sidebar(all_rows)
+    new_cutoff = _load_new_cutoff()
+    filters = render_sidebar(all_rows, new_cutoff)
     profile = _load_profile() if filters["categories"] else None
     filtered = filter_rows(
         all_rows,
@@ -241,6 +265,8 @@ def main() -> None:
         keyword_categories_any=filters["categories"] or None,
         profile=profile,
     )
+    if filters["new_only"] and new_cutoff is not None:
+        filtered = [r for r in filtered if is_new_since(r, new_cutoff)]
     sorted_rows = sort_rows(filtered, by=filters["sort_by"])
 
     st.markdown("# 🎯 Cyber Job Hunter")
@@ -248,7 +274,7 @@ def main() -> None:
         ["📋 Liste", "🔎 Détail", "📊 Stats"]
     )
     with tab_listing:
-        view_listing.render(sorted_rows, total=len(all_rows))
+        view_listing.render(sorted_rows, total=len(all_rows), new_cutoff=new_cutoff)
     with tab_detail:
         view_detail.render(sorted_rows)
     with tab_stats:

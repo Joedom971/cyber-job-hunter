@@ -185,6 +185,26 @@ class ScoreResult(ScoreResultBase, table=True):
     )
 
 
+# ─── Run history (Sprint 2 — détection nouvelles offres) ────────────────
+
+
+class ScrapeRunBase(SQLModel):
+    """Trace d'une exécution de `run_scrape.py`. Une ligne = une commande."""
+
+    started_at: datetime
+    finished_at: datetime | None = None
+    sources_run: list[str] = Field(default_factory=list, sa_column=Column(JSON))
+    jobs_fetched: int = 0
+    jobs_inserted: int = 0
+    jobs_updated: int = 0
+    jobs_marked_inactive: int = 0
+    errors_count: int = 0
+
+
+class ScrapeRun(ScrapeRunBase, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+
+
 # ─── Digest / stats (Sprint 3) ───────────────────────────────────────────
 
 

@@ -18,7 +18,7 @@ from sqlalchemy import and_
 from sqlmodel import Session, SQLModel, create_engine, select
 
 from src.deduplication import has_content_changed, merge_incoming
-from src.models import Job, JobBase, JobSource, ScoreResult
+from src.models import Job, JobBase, JobSource, ScoreResult, ScrapeRun
 
 DEFAULT_DB_PATH: Path = Path("data/jobs.db")
 
@@ -154,6 +154,44 @@ class JobRepository:
                     count += 1
             session.commit()
             return count
+
+    # ─── Historique des runs (Sprint 2) ────────────────────────────────
+
+    def save_run(self, run: ScrapeRun) -> ScrapeRun:
+        """Persiste un résumé de run scrape (1 ligne par invocation)."""
+        with self.session() as session:
+            session.add(run)
+            session.commit()
+            session.refresh(run)
+            return run
+
+    def get_latest_run(self) -> ScrapeRun | None:
+        """Le run le plus récent (par started_at)."""
+        with self.session() as session:
+            stmt = (
+                select(ScrapeRun)
+                .order_by(ScrapeRun.started_at.desc())  # type: ignore[union-attr]
+                .limit(1)
+            )
+            return _run(session, stmt).first()
+
+    def get_previous_run(self) -> ScrapeRun | None:
+        """L'avant-dernier run. None si moins de 2 runs en DB.
+
+        Sert au dashboard pour calculer "nouvelles offres depuis le run précédent".
+        """
+        with self.session() as session:
+            stmt = (
+                select(ScrapeRun)
+                .order_by(ScrapeRun.started_at.desc())  # type: ignore[union-attr]
+                .limit(2)
+            )
+            rows = list(_run(session, stmt).all())
+            return rows[1] if len(rows) >= 2 else None
+
+    def count_runs(self) -> int:
+        with self.session() as session:
+            return len(list(_run(session, select(ScrapeRun)).all()))
 
     def export_csv(self, output_path: Path, min_score: int = 0) -> int:
         output_path.parent.mkdir(parents=True, exist_ok=True)
