@@ -127,6 +127,16 @@ sources:
     rate_limit_seconds: 3
     notes: "TeamTailor SaaS, HTML public listing. Scraper enrichit chaque détail via _enrich_descriptions."
 
+  devoteam:
+    enabled: true
+    type: html
+    base_url: "https://www.devoteam.com/jobs/"
+    company_name_override: "Devoteam"
+    country_default: OTHER  # Multi-pays, country deviné à partir de la description
+    max_pages: 1
+    rate_limit_seconds: 3
+    notes: "ESN multi-pays. URLs publiques /jobs/{slug}-{id}. Description enrichie + country détecté côté texte."
+
 # ─── Sprint 2+ — planifiés (désactivés) ────────────────────────────────
 planned_sources:
 

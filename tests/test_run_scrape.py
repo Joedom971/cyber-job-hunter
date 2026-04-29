@@ -31,7 +31,7 @@ def no_sleep(monkeypatch):
 def test_registry_contains_all_active_sources():
     expected = {"remotive", "nviso", "itsme", "easi", "smals", "cream",
                 "travaillerpour", "actiris", "accenture", "kpmg",
-                "capgemini", "orange_cyberdefense"}
+                "capgemini", "orange_cyberdefense", "devoteam"}
     assert set(SCRAPER_FACTORIES.keys()) == expected
 
 
@@ -123,6 +123,9 @@ def test_run_scrape_full_e2e(tmp_path: Path):
         return_value=httpx.Response(200, json={"data": [], "total": 0, "count": 0})
     )
     respx.get("https://jobs.orangecyberdefense.com/jobs").mock(
+        return_value=httpx.Response(200, text="<html></html>")
+    )
+    respx.get("https://www.devoteam.com/jobs/").mock(
         return_value=httpx.Response(200, text="<html></html>")
     )
 

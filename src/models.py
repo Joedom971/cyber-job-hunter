@@ -38,6 +38,7 @@ class JobSource(StrEnum):
     KPMG = "kpmg"
     CAPGEMINI = "capgemini"
     ORANGE_CYBERDEFENSE = "orange_cyberdefense"
+    DEVOTEAM = "devoteam"
     # Étendu en Sprint 3+
     OTHER = "other"
 

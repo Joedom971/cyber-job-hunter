@@ -13,6 +13,7 @@ from src.scrapers.base import BaseScraper
 from src.scrapers.actiris import ActirisScraper
 from src.scrapers.capgemini import CapgeminiScraper
 from src.scrapers.cream import CreamScraper
+from src.scrapers.devoteam import DevoteamScraper
 from src.scrapers.easi import EasiScraper
 from src.scrapers.kpmg import KpmgScraper
 from src.scrapers.orange_cyberdefense import OrangeCyberdefenseScraper
@@ -38,6 +39,7 @@ SCRAPER_FACTORIES: dict[str, ScraperFactory] = {
     "kpmg": KpmgScraper,                        # Sprint 2+ — RSS feed TalentSoft Belgium
     "capgemini": CapgeminiScraper,              # Sprint 2+ — API custom Azure (BE filtered)
     "orange_cyberdefense": OrangeCyberdefenseScraper,  # Sprint 2+ — TeamTailor HTML
+    "devoteam": DevoteamScraper,                # Sprint 2+ — HTML listing multi-pays (FR/BE/LU)
 }
 
 
