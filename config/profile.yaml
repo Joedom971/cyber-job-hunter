@@ -12,6 +12,7 @@ target_titles:
   - Detection Engineer
   - GRC Analyst
   - Threat Intelligence
+  - Threat Intel              # abréviation
   - Incident Response
   - Incident Responder
   - CSIRT
@@ -20,9 +21,18 @@ target_titles:
   - Young Graduate Cyber
   - Young Graduate Security
   - Cybersecurity Consultant
+  - Cyber Security Consultant
   - Security Engineering Consultant
   - Malware Analyst
   - Network Forensic
+  # Élargissements Sprint 2 polish (matches NVISO/Smals/Cream observés)
+  - Cybersecurity Analyst    # NVISO, Cream
+  - Cyber Strategy           # NVISO "Junior Cyber Strategy & Architecture..."
+  - Cyber Architecture
+  - Information Security     # Smals "Information Security Advisor"
+  - Penetration Tester       # NVISO "Junior Penetration Tester"
+  - Pentester
+  - Application Security
 
 # ── Niveau (junior bonus +15 dans description) ──
 junior_keywords:
@@ -181,6 +191,7 @@ experience:
     - "\\blead\\b"
     - "\\bmanager\\b"
     - "team\\s+lead"
+    - "\\bprincipal\\b"
   penalty_3y: -10  # "3+ years" / "3-5 years"
   penalty_3y_patterns:
     - "3\\+\\s*years?"

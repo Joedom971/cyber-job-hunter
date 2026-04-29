@@ -88,20 +88,41 @@ def test_technical_keywords_no_match(profile):
 
 
 def test_location_preferred(profile):
-    c = _score_location("Bruxelles", profile)
+    c = _score_location("Bruxelles", Country.BE, profile)
     assert c is not None
     assert c.points == 10
 
 
 def test_location_good(profile):
-    c = _score_location("Liège", profile)
+    c = _score_location("Liège", Country.BE, profile)
     assert c is not None
     assert c.points == 5
 
 
-def test_location_unknown(profile):
-    assert _score_location("Mars", profile) is None
-    assert _score_location(None, profile) is None
+def test_location_unknown_with_other_country(profile):
+    """Country.OTHER + location inconnue → None."""
+    assert _score_location("Mars", Country.OTHER, profile) is None
+    assert _score_location(None, Country.OTHER, profile) is None
+
+
+def test_location_fallback_country_be(profile):
+    """Polish Sprint 2 : si la ville n'est pas reconnue mais country=BE → +5."""
+    c = _score_location(None, Country.BE, profile)
+    assert c is not None
+    assert c.points == 5
+    assert c.rule == "location_country_fallback"
+
+
+def test_location_fallback_country_lu(profile):
+    c = _score_location("Some unknown city", Country.LU, profile)
+    assert c is not None
+    assert c.points == 5
+    assert c.rule == "location_country_fallback"
+
+
+def test_location_remote_no_fallback(profile):
+    """Remote / Other countries n'ont pas de fallback → None."""
+    assert _score_location(None, Country.REMOTE, profile) is None
 
 
 def test_languages_fr_en(profile):

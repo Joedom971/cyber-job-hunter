@@ -19,7 +19,7 @@ from typing import Any
 
 from src.config import Profile
 from src.filters import apply_filters
-from src.models import JobBase, ScoreComponent, ScoreResult
+from src.models import Country, JobBase, ScoreComponent, ScoreResult
 
 
 # ─── Helpers de matching ─────────────────────────────────────────────────
@@ -92,19 +92,30 @@ def _score_technical_keywords(
     return components, matched
 
 
-def _score_location(location: str | None, profile: Profile) -> ScoreComponent | None:
-    """+10 préférée / +5 wallonie+LU. Flanders accepté avec EN-only → 0 bonus."""
-    if not location:
-        return None
-    loc_lower = location.lower()
+def _score_location(
+    location: str | None, country: Country, profile: Profile
+) -> ScoreComponent | None:
+    """+10 préférée (Bruxelles…) / +5 wallonie+LU. Fallback +5 si BE/LU sans match ville.
 
-    if _contains_any(loc_lower, profile.locations.preferred) is not None:
+    Sprint 2 polish : certains scrapers (NVISO, Smals) renvoient juste 'Belgium'
+    sans préciser une ville → on accordait 0 alors qu'on devrait accorder +5.
+    """
+    if location:
+        loc_lower = location.lower()
+        if _contains_any(loc_lower, profile.locations.preferred) is not None:
+            return ScoreComponent(
+                rule="location_preferred", points=10, detail=location
+            )
+        if _contains_any(loc_lower, profile.locations.good) is not None:
+            return ScoreComponent(
+                rule="location_good", points=5, detail=location
+            )
+    # Fallback country-based : si BE / LU sans ville reconnue → +5
+    if country in (Country.BE, Country.LU):
         return ScoreComponent(
-            rule="location_preferred", points=10, detail=location
-        )
-    if _contains_any(loc_lower, profile.locations.good) is not None:
-        return ScoreComponent(
-            rule="location_good", points=5, detail=location
+            rule="location_country_fallback",
+            points=5,
+            detail=f"country={country.value}",
         )
     return None
 
@@ -243,7 +254,7 @@ def score_job(job: JobBase, profile: Profile) -> ScoreResult:
     components.extend(tech_components)
     matched_keywords.extend(tech_kw)
 
-    if c := _score_location(job.location, profile):
+    if c := _score_location(job.location, job.country, profile):
         components.append(c)
     components.extend(_score_languages(text_lower, profile))
     if c := _score_education_penalty(text_lower, profile):
