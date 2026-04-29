@@ -129,13 +129,13 @@ sources:
 
   devoteam:
     enabled: true
-    type: html
-    base_url: "https://www.devoteam.com/jobs/"
+    type: rest_api
+    base_url: "https://europe-west1-dsi-careers.cloudfunctions.net/careers-api/v1.1"
     company_name_override: "Devoteam"
-    country_default: OTHER  # Multi-pays, country deviné à partir de la description
-    max_pages: 1
+    country_default: BE
+    max_pages: 4  # 49 jobs BE total, 15/page → 4 pages suffisent
     rate_limit_seconds: 3
-    notes: "ESN multi-pays. URLs publiques /jobs/{slug}-{id}. Description enrichie + country détecté côté texte."
+    notes: "Google Cloud Talent Solution API. Filtre BE via param country=Belgium. Auth Basic publique."
 
 # ─── Sprint 2+ — planifiés (désactivés) ────────────────────────────────
 planned_sources:

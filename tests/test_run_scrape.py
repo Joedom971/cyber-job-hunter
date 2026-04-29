@@ -125,8 +125,8 @@ def test_run_scrape_full_e2e(tmp_path: Path):
     respx.get("https://jobs.orangecyberdefense.com/jobs").mock(
         return_value=httpx.Response(200, text="<html></html>")
     )
-    respx.get("https://www.devoteam.com/jobs/").mock(
-        return_value=httpx.Response(200, text="<html></html>")
+    respx.get("https://europe-west1-dsi-careers.cloudfunctions.net/careers-api/v1.1").mock(
+        return_value=httpx.Response(200, json={"totalSize": 0, "matchingJobs": []})
     )
 
     db_path = tmp_path / "e2e.db"

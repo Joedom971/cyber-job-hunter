@@ -1,4 +1,4 @@
-"""Tests DevoteamScraper — HTML listing only (les pages détail bloquent notre UA)."""
+"""Tests DevoteamScraper — Google Cloud Talent Solution API."""
 
 from __future__ import annotations
 
@@ -9,8 +9,8 @@ import pytest
 import respx
 
 from src.config import SourceConfig, SourceType
-from src.models import JobSource
-from src.scrapers.devoteam import DevoteamScraper, _country_from_text
+from src.models import Country, JobSource
+from src.scrapers.devoteam import DevoteamScraper, _country_from_address, _strip_html
 from src.storage import JobRepository
 
 
@@ -23,11 +23,11 @@ def no_sleep(monkeypatch):
 def cfg() -> SourceConfig:
     return SourceConfig(
         enabled=True,
-        type=SourceType.HTML,
-        base_url="https://www.devoteam.com/jobs/",
+        type=SourceType.REST_API,
+        base_url="https://europe-west1-dsi-careers.cloudfunctions.net/careers-api/v1.1",
         rate_limit_seconds=0.0,
         jitter_max_seconds=0.0,
-        max_pages=1,
+        max_pages=2,
         timeout_seconds=5.0,
         max_retries=1,
         backoff_base_seconds=0.01,
@@ -46,69 +46,147 @@ def repo(tmp_path: Path):
     r.engine.dispose()
 
 
-HTML_FIXTURE = """
-<html><body>
-<a href="https://www.devoteam.com/jobs/cloud-security-engineer-100812534256149190">
-    <h2>Cloud Security Engineer Brussels, Permanent contract</h2>
-</a>
-<a href="https://www.devoteam.com/jobs/banking-sector-devops-engineer-133756331428324038">
-    <h2>Banking Sector DevOps Engineer Luxembourg</h2>
-</a>
-<a href="https://www.devoteam.com/jobs/cloud-security-engineer-100812534256149190">
-    <h3>duplicate, will be deduped</h3>
-</a>
-<a href="/contact">contact (ignored)</a>
-<a href="https://www.devoteam.com/about">about (ignored)</a>
-</body></html>
-"""
+SAMPLE_JOB_BE = {
+    "job": {
+        "name": "projects/dsi-careers/tenants/x/jobs/abc123",
+        "title": "Digital Identity Cybersecurity Consultant",
+        "addresses": ["Culliganlaan 3 Machelen Belgium"],
+        "description": "<p>Help clients design IAM solutions.</p>",
+        "qualifications": "<p>Bachelor in IT.</p>",
+        "responsibilities": "<p>Implement <b>IAM</b> projects.</p>",
+        "applicationInfo": {"uris": ["https://www.devoteam.com/jobs/digital-identity-123"]},
+    },
+    "jobSummary": "IAM consulting summary",
+}
+
+SAMPLE_JOB_LU = {
+    "job": {
+        "name": "projects/dsi-careers/tenants/x/jobs/lu999",
+        "title": "Cyber Security Engineer",
+        "addresses": ["Avenue de la Liberté Luxembourg"],
+        "description": "<p>Security role LU.</p>",
+        "applicationInfo": {"uris": ["https://www.devoteam.com/jobs/cyber-lu-999"]},
+    },
+}
 
 
-def test_country_detection():
-    assert _country_from_text("Brussels Belgium") == _country_from_text("brussels")
-    assert _country_from_text("Working in Luxembourg City") == _country_from_text("luxembourg")
-    assert _country_from_text("Paris office") == _country_from_text("paris")
+# ─── Helpers ─────────────────────────────────────────────────────────────
+
+
+def test_country_from_address_belgium():
+    country, city = _country_from_address(["Culliganlaan 3 Machelen Belgium"])
+    assert country == Country.BE
+    assert city is not None
+
+
+def test_country_from_address_luxembourg():
+    country, _ = _country_from_address(["Avenue de la Liberté Luxembourg"])
+    assert country == Country.LU
+
+
+def test_country_from_address_empty():
+    country, city = _country_from_address([])
+    assert country == Country.OTHER
+    assert city is None
+
+
+def test_strip_html():
+    assert _strip_html("<p>Hello <b>World</b></p>") == "Hello World"
+    assert _strip_html("") == ""
+
+
+# ─── Run intégration ─────────────────────────────────────────────────────
 
 
 @respx.mock
 def test_run_parses_jobs(cfg, repo):
-    respx.get("https://www.devoteam.com/jobs/").mock(
-        return_value=httpx.Response(200, text=HTML_FIXTURE)
+    respx.get(
+        "https://europe-west1-dsi-careers.cloudfunctions.net/careers-api/v1.1"
+    ).mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "totalSize": 2,
+                "matchingJobs": [SAMPLE_JOB_BE, SAMPLE_JOB_LU],
+            },
+        )
     )
+    cfg.max_pages = 1
     result = DevoteamScraper(cfg, repo=repo).run()
-    assert result.aborted_reason is None
-    # 2 unique jobs (3rd link is dup, contact/about ignored)
     assert result.jobs_inserted == 2
+    assert result.aborted_reason is None
 
 
 @respx.mock
-def test_run_extracts_id_and_title(cfg, repo):
-    respx.get("https://www.devoteam.com/jobs/").mock(
-        return_value=httpx.Response(200, text=HTML_FIXTURE)
+def test_run_extracts_metadata(cfg, repo):
+    respx.get(
+        "https://europe-west1-dsi-careers.cloudfunctions.net/careers-api/v1.1"
+    ).mock(
+        return_value=httpx.Response(
+            200, json={"totalSize": 1, "matchingJobs": [SAMPLE_JOB_BE]}
+        )
     )
+    cfg.max_pages = 1
     DevoteamScraper(cfg, repo=repo).run()
-    jobs = repo.get_recent_jobs(only_active=True)
-    by_id = {j.external_id: j for j in jobs}
-
-    cloud = by_id["100812534256149190"]
-    assert "Cloud Security Engineer" in cloud.title
-    # ", Permanent contract" stripped from title
-    assert "Permanent" not in cloud.title
-    assert cloud.source == JobSource.DEVOTEAM
-
-
-@respx.mock
-def test_run_dedupes_intra_page(cfg, repo):
-    respx.get("https://www.devoteam.com/jobs/").mock(
-        return_value=httpx.Response(200, text=HTML_FIXTURE)
-    )
-    result = DevoteamScraper(cfg, repo=repo).run()
-    assert result.jobs_inserted == 2  # not 3
+    [job] = repo.get_recent_jobs(only_active=True)
+    assert job.external_id == "abc123"
+    assert job.title == "Digital Identity Cybersecurity Consultant"
+    assert job.country == Country.BE
+    assert job.source == JobSource.DEVOTEAM
+    assert "IAM" in job.description
+    assert job.url.startswith("https://www.devoteam.com/")
 
 
 @respx.mock
-def test_run_empty_html_no_crash(cfg, repo):
-    respx.get("https://www.devoteam.com/jobs/").mock(
-        return_value=httpx.Response(200, text="<html></html>")
+def test_run_paginates_via_offset(cfg, repo):
+    page1 = {
+        "totalSize": 25,
+        "matchingJobs": [
+            {**SAMPLE_JOB_BE, "job": {**SAMPLE_JOB_BE["job"],
+                                       "name": f"projects/x/jobs/p1-{i}"}}
+            for i in range(15)
+        ],
+    }
+    page2 = {
+        "totalSize": 25,
+        "matchingJobs": [
+            {**SAMPLE_JOB_BE, "job": {**SAMPLE_JOB_BE["job"],
+                                       "name": f"projects/x/jobs/p2-{i}"}}
+            for i in range(10)
+        ],
+    }
+    route = respx.get(
+        "https://europe-west1-dsi-careers.cloudfunctions.net/careers-api/v1.1"
+    ).mock(side_effect=[httpx.Response(200, json=page1), httpx.Response(200, json=page2)])
+
+    cfg.max_pages = 5
+    result = DevoteamScraper(cfg, repo=repo).run()
+    assert route.call_count == 2
+    assert result.jobs_inserted == 25
+
+
+@respx.mock
+def test_run_invalid_json_reports_error(cfg, repo):
+    respx.get(
+        "https://europe-west1-dsi-careers.cloudfunctions.net/careers-api/v1.1"
+    ).mock(
+        return_value=httpx.Response(
+            200, text="not json", headers={"content-type": "application/json"}
+        )
     )
     result = DevoteamScraper(cfg, repo=repo).run()
-    assert result.jobs_fetched == 0
+    assert result.errors
+
+
+@respx.mock
+def test_run_uses_belgium_filter(cfg, repo):
+    """Vérifie que country=Belgium est bien envoyé."""
+    route = respx.get(
+        "https://europe-west1-dsi-careers.cloudfunctions.net/careers-api/v1.1"
+    ).mock(return_value=httpx.Response(200, json={"totalSize": 0, "matchingJobs": []}))
+    cfg.max_pages = 1
+    DevoteamScraper(cfg, repo=repo).run()
+    assert route.called
+    last = route.calls.last.request
+    assert "country=Belgium" in str(last.url)
+    assert "Authorization" in last.headers
