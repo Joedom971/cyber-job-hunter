@@ -162,6 +162,28 @@ technical_keywords:
     - veille sécurité
     - équipe bleue
     - équipe pourpre
+    # Cybercriminalité, police judiciaire, forensics FR/EN supplémentaires
+    - cybercriminalité
+    - cybercriminel
+    - cybercriminels
+    - cybercrime
+    - criminalité informatique
+    - criminalité numérique
+    - criminalité digitale
+    - piratage informatique
+    - piratage
+    - computer crime
+    - computer crime unit
+    - federal computer crime unit
+    - fccu
+    - ccu
+    - enquêteur cyber
+    - enquêteur numérique
+    - enquête numérique
+    - digital forensics
+    - digital investigation
+    - police judiciaire fédérale
+    - cyber investigation
   offensive:
     # Outils
     - metasploit
