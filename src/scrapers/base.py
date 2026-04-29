@@ -14,6 +14,7 @@ upsert/mark_inactive, stats du run) est mutualisé via `run()`.
 from __future__ import annotations
 
 import random
+import re
 import time
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
@@ -116,13 +117,20 @@ class _CircuitBreaker:
 # ─── BaseScraper ─────────────────────────────────────────────────────────
 
 
-_BOT_MARKERS = (
-    "just a moment",
-    "cloudflare",
-    "captcha",
-    "access denied",
-    "checking your browser",
-    "attention required",
+# Patterns regex de challenge anti-bot (insensibles à la casse).
+# Volontairement spécifiques : `cloudflare` brut matchait des URLs de CDN
+# publiques (cdnjs.cloudflare.com) → faux positifs. Ici on exige le contexte
+# "challenge" (titre, script anti-bot, cookies cf-*).
+_BOT_CHALLENGE_PATTERNS = (
+    r"<title>\s*just a moment",
+    r"<title>\s*attention\s+required",
+    r"<title>\s*access\s+denied",
+    r"<title>[^<]*captcha",
+    r"checking\s+your\s+browser\s+before",
+    r"please\s+enable\s+(javascript|cookies)\s+(and\s+(javascript|cookies)\s+)?to\s+continue",
+    r"cf-browser-verification",
+    r"cf-chl-bypass",
+    r"id=\"challenge-form\"",
 )
 
 
@@ -301,10 +309,12 @@ class BaseScraper(ABC):
         ):
             return False  # JSON/XML/CSV ne contiennent jamais de challenge HTML
         try:
-            sample = response.text[:5000].lower()
+            sample = response.text[:8000]
         except UnicodeDecodeError:
             return False
-        return any(m in sample for m in _BOT_MARKERS)
+        return any(
+            re.search(p, sample, re.IGNORECASE) for p in _BOT_CHALLENGE_PATTERNS
+        )
 
     def _robots_allowed(self, url: str) -> bool:
         """Check robots.txt. Cache par host. False uniquement si Disallow explicite."""

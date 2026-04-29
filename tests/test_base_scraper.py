@@ -254,6 +254,25 @@ def test_json_response_not_flagged_as_bot(cfg):
 
 
 @respx.mock
+def test_html_with_cloudflare_cdn_url_not_flagged(cfg):
+    """Régression : un HTML qui charge cdnjs.cloudflare.com ne doit PAS déclencher
+    la détection bot (vrai cas trouvé sur nviso.eu en avril 2026)."""
+    respx.get("https://example.com/api/jobs").mock(
+        return_value=httpx.Response(
+            200,
+            text="""<html><head>
+                <title>Jobs | Acme</title>
+                <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js"></script>
+            </head><body><h1>Jobs</h1></body></html>""",
+            headers={"content-type": "text/html"},
+        )
+    )
+    scraper = HttpDummyScraper(cfg)
+    result = scraper.run()
+    assert result.aborted_reason is None, "CDN cloudflare URL ne doit PAS être flag bot"
+
+
+@respx.mock
 def test_circuit_breaker_skips_subsequent_calls(cfg):
     """Après 3 erreurs consécutives, le scraper est en circuit-open."""
     respx.get("https://example.com/api/jobs").mock(return_value=httpx.Response(503))
