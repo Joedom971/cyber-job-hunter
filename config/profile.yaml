@@ -72,6 +72,25 @@ target_titles:
   - Cybersécurité
   - Sécurité Informatique
   - InfoSec
+  # Variantes francophones (Devoteam, Travaillerpour, Wavestone, etc.)
+  - Consultant Sécurité
+  - Consultant Cybersécurité
+  - Ingénieur Sécurité
+  - Ingénieur Cybersécurité
+  - Architecte Sécurité
+  - Architecte Cybersécurité
+  - Analyste Sécurité
+  - Analyste Cybersécurité
+  - Auditeur Sécurité
+  - Audit Sécurité
+  - Officier Sécurité
+  - Responsable Sécurité
+  - Responsable Cybersécurité
+  - Chargé de Sécurité
+  - Spécialiste Sécurité
+  - Expert Sécurité
+  - Expert Cybersécurité
+  - Conseiller Sécurité
 
 # ── Niveau (junior bonus +15 dans description) ──
 junior_keywords:
@@ -108,7 +127,7 @@ technical_keywords:
     - volatility
     - yara
     - sigma rules
-    # Concepts & frameworks
+    # Concepts & frameworks (EN)
     - mitre att&ck
     - mitre attack
     - kill chain
@@ -131,6 +150,18 @@ technical_keywords:
     - network forensics
     - blue team
     - purple team
+    # Concepts & frameworks (FR)
+    - chasse aux menaces
+    - détection menaces
+    - réponse à incident
+    - gestion d'incident
+    - analyse forensique
+    - investigation numérique
+    - renseignement menaces
+    - veille cyber
+    - veille sécurité
+    - équipe bleue
+    - équipe pourpre
   offensive:
     # Outils
     - metasploit
@@ -147,7 +178,7 @@ technical_keywords:
     - cobalt strike
     - ffuf
     - nuclei
-    # Concepts & techniques
+    # Concepts & techniques (EN)
     - kerberoasting
     - active directory exploitation
     - privilege escalation
@@ -163,6 +194,21 @@ technical_keywords:
     - social engineering
     - phishing simulation
     - reverse engineering
+    # Concepts & techniques (FR)
+    - test d'intrusion
+    - tests d'intrusion
+    - test de pénétration
+    - tests de pénétration
+    - audit de sécurité
+    - audit sécurité
+    - équipe rouge
+    - hameçonnage
+    - ingénierie sociale
+    - rétro-ingénierie
+    - analyse de vulnérabilités
+    - gestion de vulnérabilités
+    - vulnérabilité management
+    - escalade de privilèges
   scripting:
     - python
     - bash
@@ -215,7 +261,7 @@ technical_keywords:
     - cyfun
     - soc 2
     - pci dss
-    # Activités
+    # Activités (EN)
     - risk assessment
     - risk management
     - security audit
@@ -224,6 +270,19 @@ technical_keywords:
     - data protection
     - information security management
     - isms
+    # Activités (FR)
+    - gestion des risques
+    - analyse de risques
+    - évaluation des risques
+    - audit informatique
+    - audit cyber
+    - protection des données
+    - protection vie privée
+    - conformité réglementaire
+    - mise en conformité
+    - gouvernance sécurité
+    - politique de sécurité
+    - smsi  # Système de Management de la Sécurité de l'Information
   siem_tools:
     # SIEM/SOC
     - siem
@@ -258,17 +317,29 @@ technical_keywords:
     - ssl
     - encryption
     - key management
-    # Concepts généraux cyber
+    # Concepts généraux cyber (EN)
     - cybersecurity
     - cyber security
-    - cybersécurité
-    - sécurité informatique
     - infosec
     - information security
     - threat
     - malware
     - ransomware
     - ddos
+    # Concepts généraux cyber (FR)
+    - cybersécurité
+    - cyber sécurité
+    - cyber-sécurité
+    - sécurité informatique
+    - sécurité des systèmes
+    - sécurité des données
+    - cyber-attaque
+    - cyber attaque
+    - cyberdéfense
+    - cyber défense
+    - menaces cyber
+    - rançongiciel
+    - logiciel malveillant
 
 # ── Localisations pondérées ──
 locations:
