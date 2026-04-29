@@ -87,6 +87,16 @@ sources:
     rate_limit_seconds: 3
     notes: "Service emploi Bruxelles. Sitemap public 9000+ offres ; on scrape les 40 plus récentes par run (max_pages=2 × 20)."
 
+  accenture:
+    enabled: true
+    type: workday
+    base_url: "https://accenture.wd103.myworkdayjobs.com/wday/cxs/accenture/AccentureCareers/jobs"
+    company_name_override: "Accenture"
+    country_default: OTHER  # multi-country (mondial), scoring filtre par pays
+    max_pages: 5  # 100 offres cyber les plus récentes (sur ~731 monde)
+    rate_limit_seconds: 3
+    notes: "Workday CXS API publique. Tenant: accenture / wd103 / AccentureCareers. POST JSON, paginé."
+
 # ─── Sprint 2+ — planifiés (désactivés) ────────────────────────────────
 planned_sources:
 

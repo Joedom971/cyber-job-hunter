@@ -30,7 +30,7 @@ def no_sleep(monkeypatch):
 
 def test_registry_contains_all_active_sources():
     expected = {"remotive", "nviso", "itsme", "easi", "smals", "cream",
-                "travaillerpour", "actiris"}
+                "travaillerpour", "actiris", "accenture"}
     assert set(SCRAPER_FACTORIES.keys()) == expected
 
 
@@ -112,6 +112,9 @@ def test_run_scrape_full_e2e(tmp_path: Path):
     respx.get("https://www.actiris.brussels/sitemapoffers-fr.xml").mock(
         return_value=httpx.Response(200, text='<?xml version="1.0"?><urlset></urlset>')
     )
+    respx.post(
+        "https://accenture.wd103.myworkdayjobs.com/wday/cxs/accenture/AccentureCareers/jobs"
+    ).mock(return_value=httpx.Response(200, json={"total": 0, "jobPostings": []}))
 
     db_path = tmp_path / "e2e.db"
     db_url = f"sqlite:///{db_path}"

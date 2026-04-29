@@ -34,6 +34,7 @@ class JobSource(StrEnum):
     CREAM = "cream"
     TRAVAILLERPOUR = "travaillerpour"
     ACTIRIS = "actiris"
+    ACCENTURE = "accenture"
     # Étendu en Sprint 3+
     OTHER = "other"
 

@@ -18,6 +18,7 @@ from src.scrapers.recruitee import build_itsme_scraper
 from src.scrapers.remotive import RemotiveScraper
 from src.scrapers.smals import SmalsScraper
 from src.scrapers.travaillerpour import TravaillerPourScraper
+from src.scrapers.workday import build_accenture_scraper
 
 ScraperFactory = Callable[..., BaseScraper]
 
@@ -30,6 +31,7 @@ SCRAPER_FACTORIES: dict[str, ScraperFactory] = {
     "cream": CreamScraper,        # Sprint 2 — ESN cyber LU (ex-Cream Consulting)
     "travaillerpour": TravaillerPourScraper,  # Sprint 2 — emplois fédéraux BE (remplace CCB)
     "actiris": ActirisScraper,                 # Sprint 2 — service public emploi Bruxelles (sitemap + détail)
+    "accenture": build_accenture_scraper,      # Sprint 2 — Workday CXS API (Big4 conseil cyber)
 }
 
 
