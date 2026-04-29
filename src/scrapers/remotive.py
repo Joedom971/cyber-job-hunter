@@ -16,11 +16,10 @@ from collections.abc import Iterable
 from datetime import datetime
 from typing import Any, ClassVar
 
-from bs4 import BeautifulSoup
 from loguru import logger
 
 from src.models import Country, JobBase, JobSource
-from src.scrapers.base import BaseScraper, ScrapeError
+from src.scrapers.base import BaseScraper, ScrapeError, clean_html_to_text
 
 
 # Catégories Remotive utiles pour notre filtre cyber.
@@ -30,13 +29,8 @@ DEFAULT_CATEGORY = "software-dev"
 
 
 def _strip_html(html_text: str) -> str:
-    """Convertit du HTML basique en texte brut. Préserve les sauts de ligne logiques."""
-    if not html_text:
-        return ""
-    soup = BeautifulSoup(html_text, "lxml")
-    for br in soup.find_all("br"):
-        br.replace_with("\n")
-    return soup.get_text(separator="\n").strip()
+    """Délégué — on conserve le nom pour les imports (recruitee notamment)."""
+    return clean_html_to_text(html_text)
 
 
 def _map_country(raw_location: str) -> tuple[Country, str | None]:

@@ -25,11 +25,10 @@ from datetime import datetime
 from typing import ClassVar
 
 import feedparser
-from bs4 import BeautifulSoup
 from loguru import logger
 
 from src.models import Country, JobBase, JobSource
-from src.scrapers.base import BaseScraper, ScrapeError
+from src.scrapers.base import BaseScraper, ScrapeError, clean_html_to_text
 
 
 _DEFAULT_COMPANY = "KPMG Belgium"
@@ -63,12 +62,8 @@ def _clean_title(raw: str) -> str:
 
 
 def _strip_html(html: str) -> str:
-    if not html:
-        return ""
-    soup = BeautifulSoup(html, "lxml")
-    for br in soup.find_all("br"):
-        br.replace_with("\n")
-    return soup.get_text(separator=" ", strip=True)
+    """Délégué — on conserve le nom pour les imports/tests existants."""
+    return clean_html_to_text(html)
 
 
 def _parse_categories(entry) -> tuple[list[str], str | None]:  # type: ignore[no-untyped-def]

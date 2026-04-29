@@ -19,12 +19,11 @@ import re
 from collections.abc import Iterable
 from typing import Any, ClassVar
 
-from bs4 import BeautifulSoup
 from loguru import logger
 
 from src.config import SourceConfig
 from src.models import Country, JobBase, JobSource
-from src.scrapers.base import BaseScraper, ScrapeError
+from src.scrapers.base import BaseScraper, ScrapeError, clean_html_to_text
 
 
 _PAGE_SIZE = 20
@@ -184,8 +183,7 @@ class WorkdayScraper(BaseScraper):
             if not html_desc:
                 continue
             try:
-                soup = BeautifulSoup(html_desc, "lxml")
-                text = soup.get_text(separator=" ", strip=True)
+                text = clean_html_to_text(html_desc)
             except Exception:  # noqa: BLE001
                 continue
             if len(text) >= 200:

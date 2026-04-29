@@ -32,6 +32,59 @@ from src.models import JobBase, JobSource
 from src.storage import JobRepository
 
 
+# ─── HTML → texte structuré ──────────────────────────────────────────────
+
+_BLOCK_TAGS = (
+    "p", "div", "section", "article",
+    "h1", "h2", "h3", "h4", "h5", "h6",
+    "ul", "ol", "tr", "table",
+)
+
+
+def clean_html_to_text(html: str) -> str:
+    """Convertit un fragment HTML en texte plat **en préservant la structure**.
+
+    - ``<br>`` → ``\\n``
+    - ``<li>`` → préfixé par ``• `` et suffixé par ``\\n``
+    - Tags blocs (``<p>``, ``<div>``, ``<h1..6>``, ``<ul>``, ``<ol>``…) :
+      newline appendée pour séparer les paragraphes
+    - Espaces multiples par ligne → 1 espace
+    - 3+ retours à la ligne consécutifs → 2
+
+    Utiliser ce helper plutôt que ``soup.get_text(separator=" ")`` partout
+    où on stocke une description : ça permet au dashboard de rendre les
+    paragraphes et les listes correctement.
+    """
+    if not html:
+        return ""
+    from bs4 import BeautifulSoup  # noqa: PLC0415
+
+    soup = BeautifulSoup(html, "lxml")
+
+    for br in soup.find_all("br"):
+        br.replace_with("\n")
+    for li in soup.find_all("li"):
+        li.insert(0, "• ")
+        li.append("\n")
+    for tag in soup.find_all(_BLOCK_TAGS):
+        tag.append("\n")
+
+    text = soup.get_text(separator=" ")
+
+    cleaned: list[str] = []
+    blank = False
+    for raw in text.split("\n"):
+        line = re.sub(r"[ \t]+", " ", raw).strip()
+        if not line:
+            if not blank and cleaned:
+                cleaned.append("")
+            blank = True
+        else:
+            cleaned.append(line)
+            blank = False
+    return "\n".join(cleaned).strip()
+
+
 # ─── Exceptions ──────────────────────────────────────────────────────────
 
 
@@ -369,10 +422,15 @@ class BaseScraper(ABC):
 
             text: str | None = None
             for selector in selectors:
-                element = soup.select_one(selector)
-                if element is None:
+                elements = soup.select(selector)
+                if not elements:
                     continue
-                candidate = element.get_text(separator=" ", strip=True)
+                # On concatène tous les matches du sélecteur — sur certaines
+                # pages, la description est éclatée en plusieurs blocs (ex.
+                # NVISO : 6 `div.prose` séparés intro/body/contacts).
+                candidate = clean_html_to_text(
+                    "\n".join(str(e) for e in elements)
+                )
                 if len(candidate) >= min_length:
                     text = candidate[:max_length]
                     break
