@@ -4,35 +4,74 @@
 
 # ── Postes recherchés (+30 si match dans le titre, normalisation lowercase) ──
 target_titles:
+  # Métiers Blue Team / opérationnel
   - SOC Analyst
   - Security Analyst
-  - Cybersecurity Intern
-  - Cyber Security Intern
+  - Cybersecurity Analyst
+  - Cyber Security Analyst
   - Blue Team
   - Detection Engineer
+  - Security Operations
+  - SecOps
+  # GRC / risque / audit
   - GRC Analyst
+  - GRC Consultant
+  - Risk Analyst
+  - Compliance Analyst
+  - Information Security Officer
+  - ISO Junior
+  # Threat intel & IR
   - Threat Intelligence
-  - Threat Intel              # abréviation
+  - Threat Intel
+  - Threat Hunter
   - Incident Response
   - Incident Responder
   - CSIRT
   - DFIR
   - Forensic Analyst
+  - Forensics
+  - Malware Analyst
+  - Network Forensic
+  # Pentest / Red Team
+  - Penetration Tester
+  - Pentester
+  - Red Team
+  - Ethical Hacker
+  - Vulnerability Analyst
+  # AppSec / IAM / Cloud security
+  - Application Security
+  - AppSec
+  - Cloud Security
+  - Cloud Security Engineer
+  - Network Security
+  - IAM Analyst
+  - IAM Consultant
+  - Identity and Access
+  # Postes/intern génériques
+  - Cybersecurity Intern
+  - Cyber Security Intern
+  - Cybersecurity Trainee
   - Young Graduate Cyber
   - Young Graduate Security
   - Cybersecurity Consultant
   - Cyber Security Consultant
+  - Security Consultant
+  - Security Engineer
+  - Cyber Engineer
+  - Cyber Security Engineer
+  - Cybersecurity Engineer
   - Security Engineering Consultant
-  - Malware Analyst
-  - Network Forensic
-  # Élargissements Sprint 2 polish (matches NVISO/Smals/Cream observés)
-  - Cybersecurity Analyst    # NVISO, Cream
-  - Cyber Strategy           # NVISO "Junior Cyber Strategy & Architecture..."
+  # Stratégie / architecture
+  - Cyber Strategy
+  - Cybersecurity Strategy
   - Cyber Architecture
-  - Information Security     # Smals "Information Security Advisor"
-  - Penetration Tester       # NVISO "Junior Penetration Tester"
-  - Pentester
-  - Application Security
+  - Security Architect
+  # Génériques (mots-clés isolés, vu le mot Cyber/Security/Sécurité dans titre)
+  - Information Security
+  - Cybersecurity
+  - Cybersécurité
+  - Sécurité Informatique
+  - InfoSec
 
 # ── Niveau (junior bonus +15 dans description) ──
 junior_keywords:
@@ -54,22 +93,46 @@ graduate_keywords:
 # ── Mots-clés techniques (+5 chacun, capé à +30 total) ──
 technical_keywords:
   defensive:
+    # Outils
     - active directory
     - wazuh
     - sysmon
     - wireshark
+    - bloodhound
+    - splunk
+    - elasticsearch
+    - graylog
+    - osquery
+    - velociraptor
+    - autopsy
+    - volatility
+    - yara
+    - sigma rules
+    # Concepts & frameworks
     - mitre att&ck
     - mitre attack
-    - bloodhound
+    - kill chain
+    - lockheed martin kill chain
     - detection engineering
+    - threat hunting
+    - threat detection
     - incident response
     - log analysis
+    - log management
     - ioc analysis
-    - cti
+    - indicator of compromise
     - threat intelligence
+    - cti
     - osint
-    - threat hunting
+    - dfir
+    - forensics
+    - forensic analysis
+    - memory forensics
+    - network forensics
+    - blue team
+    - purple team
   offensive:
+    # Outils
     - metasploit
     - burp suite
     - nmap
@@ -78,12 +141,36 @@ technical_keywords:
     - gobuster
     - hashcat
     - john the ripper
+    - bloodhound
+    - mimikatz
+    - empire
+    - cobalt strike
+    - ffuf
+    - nuclei
+    # Concepts & techniques
     - kerberoasting
+    - active directory exploitation
+    - privilege escalation
+    - lateral movement
+    - red team
+    - red teaming
+    - penetration testing
+    - pentesting
+    - exploitation
+    - vulnerability assessment
+    - owasp top 10
+    - owasp
+    - social engineering
+    - phishing simulation
+    - reverse engineering
   scripting:
     - python
     - bash
     - powershell
     - regex
+    - shell scripting
+    - golang
+    - rust
   systems:
     - linux
     - windows
@@ -92,29 +179,96 @@ technical_keywords:
     - vm management
     - git
     - docker
+    - kubernetes
+    - virtualization
+    - vmware
+    - active directory administration
   cloud:
     - azure
     - azure ad
+    - entra id
+    - microsoft sentinel
     - aws
+    - aws iam
+    - gcp
+    - google cloud
+    - cloud security
     - iam
+    - identity and access management
+    - sso
+    - mfa
+    - zero trust
   grc:
+    # Réglementations
     - nis2
     - gdpr
+    - rgpd
+    - dora
+    - ai act
+    # Standards
     - iso 27001
+    - iso 27002
     - iso 27005
     - nist csf
-    - cyfun
+    - nist 800-53
     - cis controls
-    - ai act
-    - dora
+    - cyfun
+    - soc 2
+    - pci dss
+    # Activités
     - risk assessment
-    - audit
+    - risk management
+    - security audit
+    - audit cybersécurité
+    - compliance
+    - data protection
+    - information security management
+    - isms
   siem_tools:
+    # SIEM/SOC
     - siem
+    - soc
+    - security operations center
     - edr
     - xdr
+    - mdr
+    - sentinel
+    - qradar
+    - sentinelone
+    # Réseau / périmètre
     - ids
     - ips
+    - waf
+    - firewall
+    - fortinet
+    - palo alto
+    # Endpoint / vulnérabilité
+    - endpoint detection
+    - vulnerability scanner
+    - vulnerability management
+    - patch management
+    - nessus
+    - qualys
+    - tenable
+    # Crypto / PKI
+    - cryptography
+    - cryptographie
+    - pki
+    - tls
+    - ssl
+    - encryption
+    - key management
+    # Concepts généraux cyber
+    - cybersecurity
+    - cyber security
+    - cybersécurité
+    - sécurité informatique
+    - infosec
+    - information security
+    - threat
+    - malware
+    - ransomware
+    - ddos
 
 # ── Localisations pondérées ──
 locations:

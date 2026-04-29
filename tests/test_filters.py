@@ -9,6 +9,7 @@ from src.filters import (
     apply_filters,
     detect_dutch_requirement,
     detect_location_out_of_scope,
+    detect_not_cyber_relevance,
     detect_seniority,
 )
 from src.models import Country, Job, JobBase, JobSource, RejectReason
@@ -259,3 +260,78 @@ def test_filter_result_matched_patterns_populated(profile):
     result = apply_filters(job, profile)
     assert "senior_required" in result.matched_patterns
     assert "senior" in result.matched_patterns["senior_required"].lower()
+
+
+# ─── Cyber relevance gate ────────────────────────────────────────────────
+
+
+def test_cyber_relevance_keeps_obvious_cyber_jobs(profile):
+    """Les offres avec un titre cyber évident passent le gate."""
+    for title in (
+        "SOC Analyst Junior",
+        "Cybersecurity Consultant",
+        "Junior Penetration Tester",
+        "Information Security Advisor",
+        "Cloud Security Engineer",
+        "Threat Intelligence Junior",
+        "DFIR Intern",
+    ):
+        job = _make_job(title=title, description="")
+        not_cyber, _ = detect_not_cyber_relevance(job, profile)
+        assert not_cyber is False, f"{title!r} ne devrait pas être rejeté"
+
+
+def test_cyber_relevance_keeps_jobs_via_tech_keywords(profile):
+    """Une offre sans titre cyber mais avec keywords tech dans la description passe."""
+    job = _make_job(
+        title="Junior Engineer",
+        description="We use Python, SIEM, MITRE ATT&CK. Linux + Active Directory.",
+    )
+    not_cyber, _ = detect_not_cyber_relevance(job, profile)
+    assert not_cyber is False
+
+
+def test_cyber_relevance_rejects_non_cyber_jobs(profile):
+    """Les offres généralistes sans aucun signal cyber sont rejetées."""
+    for title, desc in (
+        ("Vendeur H/F/X", "Travailler en magasin"),
+        ("Educateur surveillant", "Encadrer des jeunes"),
+        ("Comptable général", "Tenue de comptabilité"),
+        ("Médecin Qualité médicale", "Hôpital"),
+        ("Plombier", "Entretien de plomberie"),
+    ):
+        job = _make_job(title=title, description=desc)
+        not_cyber, _ = detect_not_cyber_relevance(job, profile)
+        assert not_cyber is True, f"{title!r} devrait être rejeté"
+
+
+def test_cyber_relevance_word_boundary_no_false_positive(profile):
+    """Le gate ne match pas 'social' à cause de 'soc', etc.
+
+    Note : 'soc' fait 3 chars, donc filtré côté longueur. Mais on vérifie
+    qu'un mot court qui ne fait PAS partie de notre vocab n'est pas rejeté
+    par hasard, et qu'un mot long ne match pas un sous-mot.
+    """
+    job = _make_job(title="Social media manager", description="No tech here")
+    # 'manager' est un reject_pattern → senior_required, mais pour le gate cyber
+    # ce qui compte c'est qu'aucun keyword cyber ne soit trouvé
+    not_cyber, _ = detect_not_cyber_relevance(job, profile)
+    assert not_cyber is True
+
+
+def test_apply_filters_rejects_non_cyber(profile):
+    """Une offre 100% non-cyber est désormais rejetée par le gate."""
+    job = _make_job(title="Educateur surveillant", description="")
+    result = apply_filters(job, profile)
+    assert result.is_rejected is True
+    assert RejectReason.NOT_CYBER_RELEVANT in result.reasons
+
+
+def test_apply_filters_keeps_cyber_offers(profile):
+    """Une offre cyber évidente n'est PAS rejetée par le gate."""
+    job = _make_job(
+        title="Junior Cyber Strategy & Architecture Consultant",
+        description="Junior cyber role. NIS2, ISO 27001.",
+    )
+    result = apply_filters(job, profile)
+    assert RejectReason.NOT_CYBER_RELEVANT not in result.reasons

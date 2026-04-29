@@ -67,6 +67,7 @@ class RejectReason(StrEnum):
     MASTER_MANDATORY = "master_mandatory"
     DUTCH_REQUIRED = "dutch_required"
     LOCATION_OUT_OF_SCOPE = "location_out_of_scope"
+    NOT_CYBER_RELEVANT = "not_cyber_relevant"
     OTHER = "other"
 
 

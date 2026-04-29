@@ -231,15 +231,16 @@ def test_score_job_clamp_to_100(profile):
 
 
 def test_score_job_clamp_to_0(profile):
-    """Une offre négative cumulée → clampée à 0."""
+    """Une offre sans signal cyber est désormais rejetée par le gate (Sprint 2 polish)."""
     job = _make_job(
         title="Backend Developer",  # pas de target match
         description="Master required. 3+ years experience.",
         location="Mars",
     )
     result = score_job(job, profile)
-    assert result.score == 0  # raw négatif clampé
-    assert result.is_rejected is False  # pas rejeté formellement
+    assert result.score == 0
+    assert result.is_rejected is True
+    assert RejectReason.NOT_CYBER_RELEVANT in result.rejection_reasons
 
 
 def test_score_job_breakdown_serializable(profile):

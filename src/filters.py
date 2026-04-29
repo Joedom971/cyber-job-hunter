@@ -112,6 +112,37 @@ def detect_seniority(text: str, profile: Profile) -> list[tuple[RejectReason, st
     return found
 
 
+def detect_not_cyber_relevance(
+    job: JobBase, profile: Profile
+) -> tuple[bool, str | None]:
+    """True si l'offre n'a AUCUN signal cyber (rejet).
+
+    Une offre est cyber-pertinente si AU MOINS UN match :
+    - un `target_title` apparaît dans le titre
+    - un `technical_keyword` (toutes catégories) apparaît dans titre+description
+
+    Mots-clés < 4 chars exclus de la détection (anti-faux-positifs : 'soc' matche
+    'social', 'ssl' matche 'classy', etc.). Word-boundary regex utilisé.
+    """
+    cyber_terms: list[str] = []
+    cyber_terms.extend(profile.target_titles)
+    cyber_terms.extend(profile.technical_keywords.all_flat)
+    # Filtre des termes trop courts pour être utilisés en regex word-boundary
+    cyber_terms = [t for t in cyber_terms if len(t.strip()) >= 4]
+
+    if not cyber_terms:
+        return False, None  # safety : sans liste de référence, on ne rejette pas
+
+    # Construit un pattern d'alternation avec \b autour
+    pattern = re.compile(
+        r"\b(?:" + "|".join(re.escape(t) for t in cyber_terms) + r")\b",
+        re.IGNORECASE,
+    )
+
+    text = f"{job.title}\n{job.description}"
+    return (pattern.search(text) is None, None)
+
+
 def detect_location_out_of_scope(
     location: str | None, text: str, profile: Profile
 ) -> tuple[bool, str | None]:
@@ -183,6 +214,12 @@ def apply_filters(job: JobBase, profile: Profile) -> FilterResult:
     if out_of_scope:
         reasons.append(RejectReason.LOCATION_OUT_OF_SCOPE)
         matched[RejectReason.LOCATION_OUT_OF_SCOPE.value] = loc_pattern or ""
+
+    # Cyber relevance gate : rejet si zéro signal cyber dans titre+description
+    not_cyber, _ = detect_not_cyber_relevance(job, profile)
+    if not_cyber:
+        reasons.append(RejectReason.NOT_CYBER_RELEVANT)
+        matched[RejectReason.NOT_CYBER_RELEVANT.value] = "no target_title or tech_keyword match"
 
     return FilterResult(
         is_rejected=bool(reasons),
