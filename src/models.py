@@ -32,6 +32,7 @@ class JobSource(StrEnum):
     EASI = "easi"
     SMALS = "smals"
     CREAM = "cream"
+    TRAVAILLERPOUR = "travaillerpour"
     # Étendu en Sprint 3+
     OTHER = "other"
 

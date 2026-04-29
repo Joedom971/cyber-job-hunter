@@ -68,6 +68,15 @@ sources:
     country_default: LU
     notes: "ESN cyber LU. Ex-Cream Consulting, rebrand Audensiel."
 
+  travaillerpour:
+    enabled: true
+    type: html
+    base_url: "https://travaillerpour.be/fr/jobs?f%5B0%5D=lang%3Afr"
+    company_name_override: "Service Public Fédéral (BE)"
+    country_default: BE
+    max_pages: 10
+    notes: "Portail emplois fédéraux BE (Drupal). Remplace CCB/EGov : inclut FOD/SPF, NCCN, etc."
+
 # ─── Sprint 2+ — planifiés (désactivés) ────────────────────────────────
 planned_sources:
 

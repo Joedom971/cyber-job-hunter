@@ -16,6 +16,7 @@ from src.scrapers.nviso import NvisoScraper
 from src.scrapers.recruitee import build_itsme_scraper
 from src.scrapers.remotive import RemotiveScraper
 from src.scrapers.smals import SmalsScraper
+from src.scrapers.travaillerpour import TravaillerPourScraper
 
 ScraperFactory = Callable[..., BaseScraper]
 
@@ -26,6 +27,7 @@ SCRAPER_FACTORIES: dict[str, ScraperFactory] = {
     "easi": EasiScraper,
     "smals": SmalsScraper,        # Sprint 2 — ICT sécurité sociale BE
     "cream": CreamScraper,        # Sprint 2 — ESN cyber LU (ex-Cream Consulting)
+    "travaillerpour": TravaillerPourScraper,  # Sprint 2 — emplois fédéraux BE (remplace CCB)
 }
 
 
