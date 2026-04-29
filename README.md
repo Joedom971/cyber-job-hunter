@@ -301,7 +301,7 @@ cyber-job-hunter/
 - ✅ **Sprint 1** *(2026-04-29)* — Bootstrap, modèles, scoring, filters, storage SQLite, 4 scrapers, 173 tests
 - ✅ **Sprint 2** *(2026-04-29)* — Dashboard Streamlit (3 tabs, 10+ filtres), détection nouvelles offres, +4 scrapers (Smals, Cream, Travaillerpour, Actiris), cyber relevance gate, 268 tests
 - 🟡 **Sprint 3** *(à venir)* — Email digest Gmail SMTP + cron launchd, +Forem/StepStone/Jobat (selon ToS), Workday paramétré (Proximus/Accenture/Sopra Steria via inspection devtools)
-- 🟡 **Sprint 4** *(à venir)* — Génération de lettres de motivation (Claude API), LinkedIn avec safeguards stricts, scoring ML basé feedbacks 👍/👎
+- 🟡 **Sprint 4** *(à venir)* — Génération de lettres de motivation (via API LLM tierce), LinkedIn avec safeguards stricts, scoring ML basé feedbacks 👍/👎
 
 ## ⚠️ Sécurité
 
