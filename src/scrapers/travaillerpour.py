@@ -29,6 +29,12 @@ from src.scrapers.base import BaseScraper, ScrapeError
 
 _DEFAULT_COMPANY = "Service Public Fédéral (BE)"
 _DEFAULT_LOCATION = "Brussels"  # majorité des sièges fédéraux
+_DETAIL_SELECTORS: tuple[str, ...] = (
+    "article.node--type-job",  # Drupal node type
+    "div.region-content article",
+    "div.region-content",
+    "main",
+)
 
 # Capture {type-code}{number}-{slug}
 # type-code (3-4 lettres) : afg, cfg, xfc, xft, ...
@@ -76,6 +82,7 @@ class TravaillerPourScraper(BaseScraper):
             "[{}] page {}: {} unique offers, has_next={}",
             self.name, page, len(jobs), has_next,
         )
+        jobs = self._enrich_descriptions(jobs, _DETAIL_SELECTORS)
         return jobs, has_next
 
     def _parse_link(self, link) -> JobBase | None:  # type: ignore[no-untyped-def]

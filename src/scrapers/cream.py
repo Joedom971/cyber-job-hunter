@@ -32,6 +32,11 @@ from src.scrapers.base import BaseScraper, ScrapeError
 _DEFAULT_COMPANY = "Cream by Audensiel"
 _DEFAULT_LOCATION = "Luxembourg"  # HQ
 _PROJECT_HREF_RE = re.compile(r"https?://[^/]+/project/(?P<slug>[a-z0-9-]+)/?")
+_DETAIL_SELECTORS: tuple[str, ...] = (
+    "article.project",       # observé en recon : 3331 chars de contenu propre
+    "div.entry-content",
+    "main article",
+)
 
 # Mots-clés "tech" qu'on attend dans un titre Cream — sert à filtrer les h2
 # qui ne sont pas des jobs (ex: "WE WANT YOU", "OUR APPROACH", etc.)
@@ -105,6 +110,7 @@ class CreamScraper(BaseScraper):
             )
 
         logger.info("[{}] {} job titles parsed", self.name, len(jobs))
+        jobs = self._enrich_descriptions(jobs, _DETAIL_SELECTORS)
         return jobs, False
 
 

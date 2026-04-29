@@ -33,6 +33,11 @@ from src.scrapers.base import BaseScraper, ScrapeError
 _DEFAULT_COMPANY = "Smals"
 _DEFAULT_LOCATION = "Brussels"  # Siège Smals, pas exposé sur listing
 _HREF_RE = re.compile(r"^/(?:[a-z]{2}/)?jobs/apply/(?P<id>\d+)/(?P<slug>[a-z0-9-]+)/?$")
+_DETAIL_SELECTORS: tuple[str, ...] = (
+    "div.region--content",   # Drupal main content region
+    "article",
+    "main",
+)
 
 
 class SmalsScraper(BaseScraper):
@@ -66,6 +71,7 @@ class SmalsScraper(BaseScraper):
             "[{}] {} unique job links found",
             self.name, len(jobs),
         )
+        jobs = self._enrich_descriptions(jobs, _DETAIL_SELECTORS)
         return jobs, False
 
     def _parse_link(self, link) -> JobBase | None:  # type: ignore[no-untyped-def]

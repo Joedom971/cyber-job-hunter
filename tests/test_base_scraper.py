@@ -354,3 +354,88 @@ def test_honest_user_agent_in_requests(cfg):
     scraper = HttpDummyScraper(cfg)
     scraper.run()
     assert route.calls.last.request.headers["user-agent"] == cfg.user_agent
+
+
+# ─── _enrich_descriptions ────────────────────────────────────────────────
+
+
+@respx.mock
+def test_enrich_descriptions_replaces_short_placeholders(cfg):
+    """Le helper fetch chaque URL et remplace la description si selector match."""
+    respx.get("https://example.com/job/1").mock(
+        return_value=httpx.Response(
+            200,
+            text=(
+                "<html><body><div class='prose'>"
+                + ("Cybersecurity full description content " * 20)
+                + "</div></body></html>"
+            ),
+        )
+    )
+
+    scraper = DummyScraper(cfg)
+    job = JobBase(
+        source=JobSource.OTHER, external_id="1", title="T", company="C",
+        country=Country.BE, url="https://example.com/job/1",
+        description="Short placeholder",
+    )
+    [enriched] = scraper._enrich_descriptions([job], ("div.prose",))
+    assert "Cybersecurity full description" in enriched.description
+    assert len(enriched.description) > 200
+
+
+@respx.mock
+def test_enrich_descriptions_keeps_placeholder_on_404(cfg):
+    """Si la page détail renvoie 404, on garde la description placeholder."""
+    respx.get("https://example.com/job/1").mock(return_value=httpx.Response(404))
+    scraper = DummyScraper(cfg)
+    placeholder = "Original placeholder description"
+    job = JobBase(
+        source=JobSource.OTHER, external_id="1", title="T", company="C",
+        country=Country.BE, url="https://example.com/job/1",
+        description=placeholder,
+    )
+    [enriched] = scraper._enrich_descriptions([job], ("div.prose",))
+    assert enriched.description == placeholder
+
+
+@respx.mock
+def test_enrich_descriptions_skips_short_content(cfg):
+    """Si le contenu < min_length (default 200), on garde le placeholder."""
+    respx.get("https://example.com/job/1").mock(
+        return_value=httpx.Response(
+            200, text="<html><body><div class='prose'>tiny</div></body></html>"
+        )
+    )
+    scraper = DummyScraper(cfg)
+    placeholder = "Original placeholder"
+    job = JobBase(
+        source=JobSource.OTHER, external_id="1", title="T", company="C",
+        country=Country.BE, url="https://example.com/job/1",
+        description=placeholder,
+    )
+    [enriched] = scraper._enrich_descriptions([job], ("div.prose",))
+    assert enriched.description == placeholder
+
+
+@respx.mock
+def test_enrich_descriptions_caps_at_max_length(cfg):
+    """La description enrichie est tronquée à max_length."""
+    respx.get("https://example.com/job/1").mock(
+        return_value=httpx.Response(
+            200,
+            text="<html><body><div class='prose'>"
+            + "X" * 20000
+            + "</div></body></html>",
+        )
+    )
+    scraper = DummyScraper(cfg)
+    job = JobBase(
+        source=JobSource.OTHER, external_id="1", title="T", company="C",
+        country=Country.BE, url="https://example.com/job/1",
+        description="placeholder",
+    )
+    [enriched] = scraper._enrich_descriptions(
+        [job], ("div.prose",), max_length=5000
+    )
+    assert len(enriched.description) == 5000

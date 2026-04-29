@@ -337,6 +337,50 @@ class BaseScraper(ABC):
         self._robots_cache[host] = allowed
         return allowed
 
+    def _enrich_descriptions(
+        self,
+        jobs: list[JobBase],
+        selectors: tuple[str, ...],
+        min_length: int = 200,
+        max_length: int = 8000,
+    ) -> list[JobBase]:
+        """Fetch chaque page détail et remplace la description placeholder.
+
+        Pour chaque job : on essaie les sélecteurs CSS dans l'ordre, on prend
+        le premier qui retourne ≥ `min_length` caractères. Tronque à `max_length`.
+        En cas d'erreur HTTP, on garde la description placeholder.
+
+        ⚠️ Ajoute N requêtes HTTP par run (1 par job). Le rate limit du
+        BaseScraper s'applique → les runs deviennent significativement plus longs.
+        Utiliser uniquement pour les sources où la description complète apporte
+        une vraie valeur (cyber pertinence) et où le volume est raisonnable.
+        """
+        from bs4 import BeautifulSoup  # noqa: PLC0415
+
+        for job in jobs:
+            try:
+                response = self._http_get(job.url)
+                soup = BeautifulSoup(response.text, "lxml")
+            except Exception as e:  # noqa: BLE001
+                # Volontairement large : un échec d'enrichissement ne doit JAMAIS
+                # bloquer le run (placeholder description suffit comme fallback).
+                logger.debug("[{}] detail fetch failed for {}: {}", self.name, job.url, e)
+                continue
+
+            text: str | None = None
+            for selector in selectors:
+                element = soup.select_one(selector)
+                if element is None:
+                    continue
+                candidate = element.get_text(separator=" ", strip=True)
+                if len(candidate) >= min_length:
+                    text = candidate[:max_length]
+                    break
+
+            if text:
+                job.description = text
+        return jobs
+
     def close(self) -> None:
         self._client.close()
 

@@ -29,6 +29,11 @@ from src.scrapers.base import BaseScraper, ScrapeError
 
 
 _DEFAULT_COMPANY = "NVISO"
+_DETAIL_SELECTORS: tuple[str, ...] = (
+    "div.prose",            # bloc de contenu principal Tailwind/Next.js
+    "main article",
+    "main",
+)
 
 # Country names servis par NVISO (constatés au recon) → enum
 _COUNTRY_NAME_MAP: dict[str, Country] = {
@@ -98,6 +103,8 @@ class NvisoScraper(BaseScraper):
             "[{}] HTML had {} job links, {} parsed",
             self.name, len(links), len(jobs),
         )
+        # Enrichit avec la description complète depuis chaque page détail
+        jobs = self._enrich_descriptions(jobs, _DETAIL_SELECTORS)
         return jobs, False
 
     def _parse_link(self, link) -> JobBase | None:  # type: ignore[no-untyped-def]
