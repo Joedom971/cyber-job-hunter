@@ -35,6 +35,9 @@ class JobSource(StrEnum):
     TRAVAILLERPOUR = "travaillerpour"
     ACTIRIS = "actiris"
     ACCENTURE = "accenture"
+    KPMG = "kpmg"
+    CAPGEMINI = "capgemini"
+    ORANGE_CYBERDEFENSE = "orange_cyberdefense"
     # Étendu en Sprint 3+
     OTHER = "other"
 

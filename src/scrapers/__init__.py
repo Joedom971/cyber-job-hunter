@@ -11,8 +11,11 @@ from collections.abc import Callable
 from src.config import SourceConfig
 from src.scrapers.base import BaseScraper
 from src.scrapers.actiris import ActirisScraper
+from src.scrapers.capgemini import CapgeminiScraper
 from src.scrapers.cream import CreamScraper
 from src.scrapers.easi import EasiScraper
+from src.scrapers.kpmg import KpmgScraper
+from src.scrapers.orange_cyberdefense import OrangeCyberdefenseScraper
 from src.scrapers.nviso import NvisoScraper
 from src.scrapers.recruitee import build_itsme_scraper
 from src.scrapers.remotive import RemotiveScraper
@@ -32,6 +35,9 @@ SCRAPER_FACTORIES: dict[str, ScraperFactory] = {
     "travaillerpour": TravaillerPourScraper,  # Sprint 2 — emplois fédéraux BE (remplace CCB)
     "actiris": ActirisScraper,                 # Sprint 2 — service public emploi Bruxelles (sitemap + détail)
     "accenture": build_accenture_scraper,      # Sprint 2 — Workday CXS API (Big4 conseil cyber)
+    "kpmg": KpmgScraper,                        # Sprint 2+ — RSS feed TalentSoft Belgium
+    "capgemini": CapgeminiScraper,              # Sprint 2+ — API custom Azure (BE filtered)
+    "orange_cyberdefense": OrangeCyberdefenseScraper,  # Sprint 2+ — TeamTailor HTML
 }
 
 

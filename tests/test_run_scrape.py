@@ -30,7 +30,8 @@ def no_sleep(monkeypatch):
 
 def test_registry_contains_all_active_sources():
     expected = {"remotive", "nviso", "itsme", "easi", "smals", "cream",
-                "travaillerpour", "actiris", "accenture"}
+                "travaillerpour", "actiris", "accenture", "kpmg",
+                "capgemini", "orange_cyberdefense"}
     assert set(SCRAPER_FACTORIES.keys()) == expected
 
 
@@ -115,6 +116,15 @@ def test_run_scrape_full_e2e(tmp_path: Path):
     respx.post(
         "https://accenture.wd103.myworkdayjobs.com/wday/cxs/accenture/AccentureCareers/jobs"
     ).mock(return_value=httpx.Response(200, json={"total": 0, "jobPostings": []}))
+    respx.get("https://kpmg-career.talent-soft.com/handlers/offerRss.ashx").mock(
+        return_value=httpx.Response(200, text='<?xml version="1.0"?><rss version="2.0"><channel></channel></rss>')
+    )
+    respx.get("https://cg-jobstream-api.azurewebsites.net/api/job-search").mock(
+        return_value=httpx.Response(200, json={"data": [], "total": 0, "count": 0})
+    )
+    respx.get("https://jobs.orangecyberdefense.com/jobs").mock(
+        return_value=httpx.Response(200, text="<html></html>")
+    )
 
     db_path = tmp_path / "e2e.db"
     db_url = f"sqlite:///{db_path}"
