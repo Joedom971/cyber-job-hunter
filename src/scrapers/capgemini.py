@@ -30,7 +30,7 @@ from typing import Any, ClassVar
 from loguru import logger
 
 from src.models import Country, JobBase, JobSource
-from src.scrapers.base import BaseScraper, ScrapeError
+from src.scrapers.base import BaseScraper, ScrapeError, clean_html_to_text
 
 
 _DEFAULT_COMPANY = "Capgemini"
@@ -96,7 +96,10 @@ class CapgeminiScraper(BaseScraper):
             return None
 
         ref = item.get("ref") or ext_id
-        description = item.get("description_stripped") or item.get("description") or ""
+        # `description_stripped` est trompeur : c'est du HTML doublement
+        # encodé (`&lt;p&gt;...`). Seul `description` contient du HTML
+        # exploitable → on le strippe correctement via le helper partagé.
+        description = clean_html_to_text(item.get("description") or "")
         location = item.get("location") or "Brussels"
         brand = item.get("brand") or _DEFAULT_COMPANY
 

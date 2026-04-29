@@ -34,9 +34,9 @@ _DEFAULT_COMPANY = "Smals"
 _DEFAULT_LOCATION = "Brussels"  # Siège Smals, pas exposé sur listing
 _HREF_RE = re.compile(r"^/(?:[a-z]{2}/)?jobs/apply/(?P<id>\d+)/(?P<slug>[a-z0-9-]+)/?$")
 _DETAIL_SELECTORS: tuple[str, ...] = (
-    "div.region--content",   # Drupal main content region
-    "article",
-    "main",
+    "div.node--type-job",          # Drupal — corps réel de l'offre Smals
+    "div.node--view-mode-full",
+    "div.field--name-body",
 )
 
 

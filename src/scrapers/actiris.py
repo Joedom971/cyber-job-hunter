@@ -30,7 +30,7 @@ from bs4 import BeautifulSoup
 from loguru import logger
 
 from src.models import Country, JobBase, JobSource
-from src.scrapers.base import BaseScraper, ScrapeError
+from src.scrapers.base import BaseScraper, ScrapeError, clean_html_to_text
 
 
 SITEMAP_URL = "https://www.actiris.brussels/sitemapoffers-fr.xml"
@@ -151,11 +151,22 @@ class ActirisScraper(BaseScraper):
         og_desc = og_desc_meta.get("content") if og_desc_meta else None
         location, job_type = _parse_og_description(og_desc)
 
-        # Description visible côté scoring : titre + meta
+        # Bloc principal de la fiche : on repère le `<div class="row">` qui
+        # contient "Description de la fonction" (tous les h3 utiles sont à
+        # l'intérieur). Sans ça, le scoring n'a que le titre et rejette des
+        # offres pourtant cyber (ex. ref=5830363 "Cyber enquêteur").
+        body_html: str | None = None
+        for div in soup.select("main .row"):
+            if "Description de la fonction" in div.get_text(" ", strip=True):
+                body_html = str(div)
+                break
+
         description_parts = [title]
         if og_desc:
             description_parts.append(og_desc)
-        description = "\n".join(description_parts)
+        if body_html:
+            description_parts.append(clean_html_to_text(body_html))
+        description = "\n\n".join(description_parts)[:8000]
 
         return JobBase(
             source=JobSource.ACTIRIS,
