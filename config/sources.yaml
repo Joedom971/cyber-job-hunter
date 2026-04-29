@@ -30,11 +30,11 @@ sources:
 
   nviso:
     enabled: true
-    type: recruitee
-    base_url: https://nviso.recruitee.com/api/offers/
+    type: html
+    base_url: https://www.nviso.eu/jobs/
     company_name_override: NVISO
     country_default: BE
-    notes: "Cyber pure-player BE, parfois 0 offre selon période"
+    notes: "Cyber pure-player BE. Quitté Recruitee en avril 2026 → HTML statique."
 
   itsme:
     enabled: true

@@ -162,12 +162,11 @@ class RecruiteeScraper(BaseScraper):
 
 
 # ─── Factories pré-paramétrées (utilisées par le runner) ─────────────────
-
-
-def build_nviso_scraper(config: SourceConfig, **kwargs: Any) -> RecruiteeScraper:
-    return RecruiteeScraper(
-        config, source=JobSource.NVISO, company_name="NVISO", **kwargs
-    )
+#
+# NVISO a quitté Recruitee en avril 2026 (404). La factory `build_nviso_scraper`
+# a été remplacée par `src.scrapers.nviso.NvisoScraper` (HTML statique). Tout
+# changement futur d'ATS pour itsme suivra le même pattern : créer un module
+# scraper dédié quand le shape change.
 
 
 def build_itsme_scraper(config: SourceConfig, **kwargs: Any) -> RecruiteeScraper:
@@ -179,7 +178,6 @@ def build_itsme_scraper(config: SourceConfig, **kwargs: Any) -> RecruiteeScraper
 __all__ = [
     "RecruiteeScraper",
     "build_itsme_scraper",
-    "build_nviso_scraper",
 ]
 
 

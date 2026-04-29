@@ -15,6 +15,7 @@ from click.testing import CliRunner
 
 from src.scrapers import SCRAPER_FACTORIES, available_sources, get_factory
 from src.scrapers.easi import EasiScraper
+from src.scrapers.nviso import NvisoScraper
 from src.scrapers.recruitee import RecruiteeScraper
 from src.scrapers.remotive import RemotiveScraper
 
@@ -46,7 +47,7 @@ def test_factory_returns_correct_class():
     )
 
     assert isinstance(get_factory("remotive")(cfg), RemotiveScraper)
-    assert isinstance(get_factory("nviso")(cfg), RecruiteeScraper)
+    assert isinstance(get_factory("nviso")(cfg), NvisoScraper)
     assert isinstance(get_factory("itsme")(cfg), RecruiteeScraper)
     assert isinstance(get_factory("easi")(cfg), EasiScraper)
 
@@ -68,15 +69,15 @@ def test_run_scrape_full_e2e(tmp_path: Path):
             }]},
         )
     )
-    respx.get("https://nviso.recruitee.com/api/offers/").mock(
+    respx.get("https://www.nviso.eu/jobs/").mock(
         return_value=httpx.Response(
-            200, json={"offers": [{
-                "id": 100, "title": "SOC Analyst Junior", "slug": "soc",
-                "city": "Brussels", "country_code": "BE", "status": "published",
-                "careers_url": "https://nviso.recruitee.com/o/soc",
-                "description": "<p>junior cyber python</p>",
-                "requirements": "<ul><li>linux</li></ul>",
-            }]},
+            200,
+            text="""<html><body>
+            <a href="/job/junior-cyber-be">
+                <h3>Junior Cyber Strategy Consultant</h3>
+                <div>Belgium</div>
+            </a>
+            </body></html>""",
         )
     )
     respx.get("https://itsme.recruitee.com/api/offers/").mock(
@@ -114,8 +115,8 @@ def test_run_scrape_full_e2e(tmp_path: Path):
 
 @respx.mock
 def test_run_scrape_source_filter(tmp_path: Path):
-    respx.get("https://nviso.recruitee.com/api/offers/").mock(
-        return_value=httpx.Response(200, json={"offers": []})
+    respx.get("https://www.nviso.eu/jobs/").mock(
+        return_value=httpx.Response(200, text="<html></html>")
     )
 
     db_path = tmp_path / "filter.db"
@@ -145,8 +146,8 @@ def test_run_scrape_unknown_source_warns(tmp_path: Path):
 @respx.mock
 def test_run_scrape_dry_run_no_db(tmp_path: Path, monkeypatch):
     """En --dry-run, aucune DB n'est créée."""
-    respx.get("https://nviso.recruitee.com/api/offers/").mock(
-        return_value=httpx.Response(200, json={"offers": []})
+    respx.get("https://www.nviso.eu/jobs/").mock(
+        return_value=httpx.Response(200, text="<html></html>")
     )
 
     monkeypatch.chdir(tmp_path)  # évite l'effet de bord sur ./data/jobs.db
