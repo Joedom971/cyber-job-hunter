@@ -1,0 +1,31 @@
+# ─── Core runtime ────────────────────────────────────────
+pydantic>=2.6,<3.0
+sqlmodel>=0.0.16
+httpx>=0.27,<1.0
+feedparser>=6.0
+beautifulsoup4>=4.12
+lxml>=5.0
+PyYAML>=6.0
+python-dotenv>=1.0
+loguru>=0.7
+click>=8.1
+
+# ─── Politesse scraping ──────────────────────────────────
+hishel>=0.0.30   # cache HTTP transparent compatible httpx (ETag / Last-Modified)
+
+# ─── Dashboard (Sprint 2) ────────────────────────────────
+streamlit>=1.33
+pandas>=2.2
+
+# ─── Email digest (Sprint 3) ─────────────────────────────
+jinja2>=3.1
+
+# ─── Dev tooling ─────────────────────────────────────────
+pytest>=8.1
+pytest-cov>=5.0
+pytest-mock>=3.14
+respx>=0.21         # mock httpx pour tests scrapers
+ruff>=0.4
+mypy>=1.10
+types-PyYAML
+types-beautifulsoup4
