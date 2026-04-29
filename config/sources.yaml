@@ -11,7 +11,7 @@ defaults:
   timeout_seconds: 15
   max_retries: 3
   backoff_base_seconds: 5  # backoff = base * (3 ** attempt) → 5 / 15 / 45
-  user_agent: "JobHunterBot/1.0 (+contact: johanhatchi@proton.me)"
+  user_agent: "JobHunterBot/1.0 (+contact: cyberjobhunter.justly677@passmail.com)"
   respect_robots_txt: true
   min_hours_between_runs: 12
 
