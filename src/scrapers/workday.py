@@ -83,6 +83,7 @@ class WorkdayScraper(BaseScraper):
         site: str,
         company_name: str = "Unknown",
         search_text: str = "cyber",
+        country_facet_ids: list[str] | None = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(config, **kwargs)
@@ -93,6 +94,9 @@ class WorkdayScraper(BaseScraper):
         self._workday_site = site  # ex: "AccentureCareers"
         self._company_name = company_name
         self._workday_search = search_text
+        # Liste d'IDs Workday opaques de pays (facet locationCountry).
+        # Tenant-spécifique : chaque entreprise a ses propres IDs.
+        self._country_facet_ids = country_facet_ids or []
 
     @property
     def _api_url(self) -> str:
@@ -107,8 +111,11 @@ class WorkdayScraper(BaseScraper):
 
     def fetch_jobs(self, page: int) -> tuple[Iterable[JobBase], bool]:
         offset = (page - 1) * _PAGE_SIZE
+        applied_facets: dict[str, list[str]] = {}
+        if self._country_facet_ids:
+            applied_facets["locationCountry"] = list(self._country_facet_ids)
         body = {
-            "appliedFacets": {},
+            "appliedFacets": applied_facets,
             "limit": _PAGE_SIZE,
             "offset": offset,
             "searchText": self._workday_search,
@@ -235,6 +242,13 @@ class WorkdayScraper(BaseScraper):
 # ─── Factories pré-paramétrées ───────────────────────────────────────────
 
 
+# IDs Workday opaques pour Accenture (tenant-spécifique, ne marchent pas ailleurs).
+# Récupérés via inspection des facets de l'API CXS le 2026-04-29.
+ACCENTURE_COUNTRY_BELGIUM = "a04ea128f43a42e59b1e6a19e8f0b374"
+# Note : Accenture n'a pas Luxembourg dans la liste des pays (probablement
+# géré sous "Belgium" ou via un autre site Workday).
+
+
 def build_accenture_scraper(config: SourceConfig, **kwargs: Any) -> WorkdayScraper:
     return WorkdayScraper(
         config,
@@ -244,6 +258,7 @@ def build_accenture_scraper(config: SourceConfig, **kwargs: Any) -> WorkdayScrap
         site="AccentureCareers",
         company_name="Accenture",
         search_text="cyber",
+        country_facet_ids=[ACCENTURE_COUNTRY_BELGIUM],
         **kwargs,
     )
 

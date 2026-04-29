@@ -92,10 +92,10 @@ sources:
     type: workday
     base_url: "https://accenture.wd103.myworkdayjobs.com/wday/cxs/accenture/AccentureCareers/jobs"
     company_name_override: "Accenture"
-    country_default: OTHER  # multi-country (mondial), scoring filtre par pays
-    max_pages: 5  # 100 offres cyber les plus récentes (sur ~731 monde)
+    country_default: BE
+    max_pages: 1  # Filtré BE only via locationCountry facet → ~7 jobs cyber Belgium
     rate_limit_seconds: 3
-    notes: "Workday CXS API publique. Tenant: accenture / wd103 / AccentureCareers. POST JSON, paginé."
+    notes: "Workday CXS API publique. Filtre Belgique appliqué via facet locationCountry."
 
 # ─── Sprint 2+ — planifiés (désactivés) ────────────────────────────────
 planned_sources:
