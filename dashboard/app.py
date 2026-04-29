@@ -7,6 +7,7 @@ Lance avec :
 from __future__ import annotations
 
 import sys
+from datetime import datetime
 from pathlib import Path
 
 # Permet d'importer src.* sans installer le package
@@ -87,6 +88,35 @@ def _reset_filters() -> None:
         st.session_state.pop(k, None)
 
 
+def _trigger_scrape() -> None:
+    """Lance `run_scrape.py` en arrière-plan via subprocess.Popen.
+
+    Le process tourne en détaché — l'utilisateur doit cliquer Refresh une
+    fois le scrape fini (~15 min) pour voir les nouvelles offres.
+    """
+    import subprocess
+    import sys
+
+    project_root = Path(__file__).resolve().parent.parent
+    log_path = project_root / "data" / "last_scrape.log"
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+
+    try:
+        with log_path.open("w", encoding="utf-8") as log_file:
+            subprocess.Popen(  # noqa: S603
+                [sys.executable, "scripts/run_scrape.py"],
+                cwd=str(project_root),
+                stdout=log_file,
+                stderr=subprocess.STDOUT,
+                start_new_session=True,
+            )
+        st.session_state["scrape_triggered_at"] = datetime.now().isoformat()
+        st.toast("🕷️ Scrape lancé en arrière-plan. Reviens dans ~15 min + clique Refresh.",
+                 icon="🚀")
+    except Exception as e:  # noqa: BLE001
+        st.error(f"Impossible de lancer le scrape : {e}")
+
+
 # ─── Sidebar ─────────────────────────────────────────────────────────────
 
 
@@ -109,12 +139,23 @@ def render_sidebar(all_rows: list[JobRow], new_cutoff) -> dict:  # type: ignore[
             st.sidebar.success(f"🆕 {new_count} nouvelles depuis le run précédent")
 
     c_refresh, c_reset = st.sidebar.columns(2)
-    if c_refresh.button("🔄 Refresh", use_container_width=True):
+    if c_refresh.button("🔄 Refresh", use_container_width=True,
+                        help="Recharge les offres depuis la DB (vide le cache 60s)"):
         st.cache_data.clear()
         st.rerun()
-    if c_reset.button("🧹 Reset", use_container_width=True, help="Réinitialise tous les filtres"):
+    if c_reset.button("🧹 Reset", use_container_width=True,
+                      help="Réinitialise tous les filtres"):
         _reset_filters()
         st.rerun()
+
+    # Scrape button : lance run_scrape.py en background
+    if st.sidebar.button(
+        "🕷️ Lancer un scrape",
+        use_container_width=True,
+        help="Exécute tous les scrapers en arrière-plan (~15 min). "
+             "Le résultat apparaîtra après un Refresh.",
+    ):
+        _trigger_scrape()
 
     stats = compute_stats(all_rows)
     st.sidebar.markdown("### 📊 Stats globales")
