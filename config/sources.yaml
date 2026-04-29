@@ -1,0 +1,120 @@
+# ─── Sources de scraping — config par scraper ───
+# `enabled: true` → la source est scrapée par `scripts/run_scrape.py`
+# `enabled: false` → ignorée (utile pour debug ou Sprint à venir)
+#
+# Chaque source hérite des `defaults` puis override ce dont elle a besoin.
+
+defaults:
+  rate_limit_seconds: 3
+  jitter_max_seconds: 1.5
+  max_pages: 5
+  timeout_seconds: 15
+  max_retries: 3
+  backoff_base_seconds: 5  # backoff = base * (3 ** attempt) → 5 / 15 / 45
+  user_agent: "JobHunterBot/1.0 (+contact: johanhatchi@proton.me)"
+  respect_robots_txt: true
+  min_hours_between_runs: 12
+
+# ─── Sprint 1 — actifs ─────────────────────────────────────────────────
+sources:
+
+  remotive:
+    enabled: true
+    type: rest_api
+    base_url: https://remotive.com/api/remote-jobs
+    # TOS Remotive: max 4 req/jour, 24h delay sur les données, attribution obligatoire.
+    # On respecte avec un rate limit large + 1 run / 12h.
+    rate_limit_seconds: 21600  # 6h entre 2 requêtes hypothétiques (safe vs TOS)
+    max_pages: 1               # endpoint renvoie tout en 1 appel (~20-30 jobs)
+    notes: "TOS strictes - https://remotive.com/api-documentation"
+
+  nviso:
+    enabled: true
+    type: recruitee
+    base_url: https://nviso.recruitee.com/api/offers/
+    company_name_override: NVISO
+    country_default: BE
+    notes: "Cyber pure-player BE, parfois 0 offre selon période"
+
+  itsme:
+    enabled: true
+    type: recruitee
+    base_url: https://itsme.recruitee.com/api/offers/
+    company_name_override: itsme
+    country_default: BE
+    notes: "Scale-up Brussels digital identity"
+
+  easi:
+    enabled: true
+    type: html
+    base_url: https://www.easi.net/en/jobs
+    company_name_override: EASI
+    country_default: BE
+    notes: "ESN BE, IT/cyber, careers HTML statique"
+
+# ─── Sprint 2+ — planifiés (désactivés) ────────────────────────────────
+planned_sources:
+
+  smals:
+    type: html
+    base_url: https://www.smals.be/jobs
+    notes: "ICT sécurité sociale BE, tier_1_priority"
+    sprint: 2
+
+  ccb:
+    type: html
+    base_url: https://ccb.belgium.be/jobs
+    notes: "Centre for Cybersecurity Belgium"
+    sprint: 2
+
+  cream_audensiel:
+    type: html
+    base_url: https://www.creamconsulting.com/
+    notes: "Rebrand de Cream Consulting BE → Cream by Audensiel"
+    sprint: 2
+
+  cybersecurity_lu:
+    type: spa_react
+    base_url: https://cybersecurity.lu/
+    notes: "SPA React, à inspecter manuellement (devtools network) pour trouver l'API XHR"
+    sprint: 2
+
+  cert_eu:
+    type: html
+    base_url: https://cert.europa.eu/careers
+    notes: "Pertinent Blue Team mais clearance EU SECRET requise pour la plupart"
+    sprint: 2
+
+  spotit:
+    type: html_cloudflare
+    base_url: https://www.spotit.be/jobs
+    notes: "Protégé Cloudflare — Playwright stealth requis"
+    sprint: 3
+
+  proximus:
+    type: workday
+    base_url: https://careers.proximus.com/
+    sprint: 3
+
+  accenture_be:
+    type: workday
+    base_url: https://www.accenture.com/be-en/careers
+    sprint: 3
+
+  deloitte_be:
+    type: avature
+    base_url: https://www.deloitte.com/be/en/careers
+    sprint: 3
+
+  stepstone_be:
+    type: html
+    base_url: https://www.stepstone.be/
+    sprint: 3
+
+# ─── LinkedIn (opt-in strict, pas avant Sprint 4) ──────────────────────
+linkedin:
+  enabled: false
+  rate_limit_seconds: 3
+  max_jobs_per_day: 200
+  abort_on_bot_detection: true
+  notes: "ToS interdit le scraping massif - approche prudente uniquement"

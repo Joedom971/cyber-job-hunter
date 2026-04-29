@@ -1,0 +1,210 @@
+# ─── Profil cible — Johan-Emmanuel Hatchi (BeCode cyber, stage Sept 2026) ───
+# Édité ce fichier sans toucher au code → le scoring/filters s'adapte.
+# Toute modification doit passer la validation Pydantic au démarrage (src/config.py).
+
+# ── Postes recherchés (+30 si match dans le titre, normalisation lowercase) ──
+target_titles:
+  - SOC Analyst
+  - Security Analyst
+  - Cybersecurity Intern
+  - Cyber Security Intern
+  - Blue Team
+  - Detection Engineer
+  - GRC Analyst
+  - Threat Intelligence
+  - Incident Response
+  - Incident Responder
+  - CSIRT
+  - DFIR
+  - Forensic Analyst
+  - Young Graduate Cyber
+  - Young Graduate Security
+  - Cybersecurity Consultant
+  - Security Engineering Consultant
+  - Malware Analyst
+  - Network Forensic
+
+# ── Niveau (junior bonus +15 dans description) ──
+junior_keywords:
+  - junior
+  - stage
+  - intern
+  - internship
+  - trainee
+  - graduate program
+  - entry level
+  - 0-2 years
+  - 1-3 years
+
+# ── Bonus +10 supplémentaire si dans titre / description ──
+graduate_keywords:
+  - young graduate
+  - graduate program
+
+# ── Mots-clés techniques (+5 chacun, capé à +30 total) ──
+technical_keywords:
+  defensive:
+    - active directory
+    - wazuh
+    - sysmon
+    - wireshark
+    - mitre att&ck
+    - mitre attack
+    - bloodhound
+    - detection engineering
+    - incident response
+    - log analysis
+    - ioc analysis
+    - cti
+    - threat intelligence
+    - osint
+    - threat hunting
+  offensive:
+    - metasploit
+    - burp suite
+    - nmap
+    - sqlmap
+    - hydra
+    - gobuster
+    - hashcat
+    - john the ripper
+    - kerberoasting
+  scripting:
+    - python
+    - bash
+    - powershell
+    - regex
+  systems:
+    - linux
+    - windows
+    - macos
+    - cisco ios
+    - vm management
+    - git
+    - docker
+  cloud:
+    - azure
+    - azure ad
+    - aws
+    - iam
+  grc:
+    - nis2
+    - gdpr
+    - iso 27001
+    - iso 27005
+    - nist csf
+    - cyfun
+    - cis controls
+    - ai act
+    - dora
+    - risk assessment
+    - audit
+  siem_tools:
+    - siem
+    - edr
+    - xdr
+    - ids
+    - ips
+
+# ── Localisations pondérées ──
+locations:
+  preferred:  # +10
+    - Brussels
+    - Bruxelles
+    - Brussel
+    - Etterbeek
+    - Ixelles
+    - Schaerbeek
+    - Evere
+    - Anderlecht
+    - Saint-Gilles
+    - Uccle
+    - Woluwe
+  good:  # +5
+    - Wallonia
+    - Wallonie
+    - Brabant wallon
+    - Liège
+    - Namur
+    - Mons
+    - Charleroi
+    - Louvain-la-Neuve
+    - Nivelles
+    - Luxembourg
+    - Luxembourg City
+  flanders_only_if_english:  # accepté seulement si offre 100% EN
+    - Antwerp
+    - Anvers
+    - Gent
+    - Ghent
+    - Brugge
+    - Bruges
+    - Leuven
+    - Mechelen
+
+# ── Langues (bonus si match) ──
+languages:
+  french_english_bonus: 10
+  english_only_bonus: 8
+  french_only_bonus: 8
+  dutch_nice_to_have_bonus: 5
+
+# Patterns regex (insensibles à la casse) qui DÉCLENCHENT un rejet
+# si pas d'alternative anglaise mentionnée dans la même offre.
+dutch_required_patterns:
+  - "dutch\\s+is\\s+mandatory"
+  - "dutch\\s+(b2|c1|c2)\\s+(required|mandatory)"
+  - "(b2|c1|c2)\\s+(level\\s+)?(in\\s+)?dutch"
+  - "nederlands\\s+(b2|c1|c2)"
+  - "moedertaal\\s+nederlands"
+  - "native\\s+dutch"
+  - "fluent\\s+(in\\s+)?dutch.*(required|mandatory|must)"
+  - "neerlandais\\s+courant\\s+(exigé|requis|obligatoire)"
+
+# Patterns indiquant que l'anglais OU le français est une alternative valide
+# → si l'un de ces patterns matche, le rejet "dutch_required" ne s'applique pas.
+language_alternative_patterns:
+  - "english\\s+(or|ou)\\s+dutch"
+  - "dutch\\s+(or|ou)\\s+english"
+  - "french\\s+(or|ou)\\s+dutch"
+  - "english\\s+is\\s+sufficient"
+  - "english-?speaking\\s+(team|environment)"
+
+# ── Expérience ──
+experience:
+  reject_patterns:  # rejet (score = 0) si match dans description
+    - "5\\+\\s*years?"
+    - "5\\s*-\\s*\\d+\\s*years?"
+    - "minimum\\s+5\\s+years?"
+    - "at\\s+least\\s+5\\s+years?"
+    - "senior\\b"
+    - "\\blead\\b"
+    - "\\bmanager\\b"
+    - "team\\s+lead"
+  penalty_3y: -10  # "3+ years" / "3-5 years"
+  penalty_3y_patterns:
+    - "3\\+\\s*years?"
+    - "minimum\\s+3\\s+years?"
+    - "at\\s+least\\s+3\\s+years?"
+
+# ── Diplôme ──
+education:
+  master_mandatory_penalty: -20
+  bachelor_required_penalty: -5
+  master_mandatory_patterns:
+    - "master.*(required|mandatory|must)"
+    - "msc\\s+(required|mandatory)"
+    - "(required|mandatory).*master"
+  bachelor_required_patterns:
+    - "bachelor.*(required|mandatory)"
+    - "bsc\\s+(required|mandatory)"
+  master_with_alternative_patterns:  # désamorce le penalty
+    - "master\\s+or\\s+equivalent"
+    - "master.*or\\s+relevant\\s+experience"
+    - "bachelor\\s+or\\s+master"
+
+# ── Bornes du score final ──
+score_bounds:
+  min: 0
+  max: 100
+  technical_keywords_cap: 30

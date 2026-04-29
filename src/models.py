@@ -17,7 +17,7 @@ from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field as PydField, HttpUrl, field_validator
-from sqlmodel import JSON, Column, Field, Relationship, SQLModel, UniqueConstraint
+from sqlmodel import JSON, Column, Field, SQLModel, UniqueConstraint
 
 
 # ─── Enums ───────────────────────────────────────────────────────────────
@@ -128,10 +128,10 @@ class Job(JobBase, table=True):
     scraped_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), index=True)
     is_active: bool = Field(default=True, description="False si l'offre a disparu de la source")
 
-    scores: list["ScoreResult"] = Relationship(
-        back_populates="job",
-        sa_relationship_kwargs={"cascade": "all, delete-orphan"},
-    )
+    # Note: relation `scores` (1-N → ScoreResult) sera ajoutée dans `src/storage.py`
+    # quand on aura besoin de la traverser (Sprint 1 / étape 6). On évite ici la
+    # syntaxe `Relationship` qui demande des annotations Mapped[] complexes
+    # incompatibles avec SQLModel < 0.1 + SQLAlchemy 2.x stricts.
 
     @staticmethod
     def compute_content_hash(
@@ -181,8 +181,6 @@ class ScoreResult(ScoreResultBase, table=True):
     computed_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc), index=True
     )
-
-    job: Job | None = Relationship(back_populates="scores")
 
 
 # ─── Digest / stats (Sprint 3) ───────────────────────────────────────────
