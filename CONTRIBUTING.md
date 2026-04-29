@@ -36,8 +36,6 @@ fix(filters): refine Dutch detection to handle accent-insensitive patterns
 chore(scrapers): use Proton Pass alias for User-Agent contact email
 ```
 
-**Pas de mention** de Claude / AI / Co-Authored-By (préférence personnelle).
-
 ### Code style
 
 - **Type hints** sur toutes les signatures publiques.
