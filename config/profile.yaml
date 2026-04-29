@@ -159,7 +159,7 @@ dutch_required_patterns:
   - "moedertaal\\s+nederlands"
   - "native\\s+dutch"
   - "fluent\\s+(in\\s+)?dutch.*(required|mandatory|must)"
-  - "neerlandais\\s+courant\\s+(exigé|requis|obligatoire)"
+  - "n[eé]erlandais\\s+courant\\s+(exig[eé]|requis|obligatoire)"
 
 # Patterns indiquant que l'anglais OU le français est une alternative valide
 # → si l'un de ces patterns matche, le rejet "dutch_required" ne s'applique pas.
