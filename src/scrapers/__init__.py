@@ -10,6 +10,7 @@ from collections.abc import Callable
 
 from src.config import SourceConfig
 from src.scrapers.base import BaseScraper
+from src.scrapers.actiris import ActirisScraper
 from src.scrapers.cream import CreamScraper
 from src.scrapers.easi import EasiScraper
 from src.scrapers.nviso import NvisoScraper
@@ -28,6 +29,7 @@ SCRAPER_FACTORIES: dict[str, ScraperFactory] = {
     "smals": SmalsScraper,        # Sprint 2 — ICT sécurité sociale BE
     "cream": CreamScraper,        # Sprint 2 — ESN cyber LU (ex-Cream Consulting)
     "travaillerpour": TravaillerPourScraper,  # Sprint 2 — emplois fédéraux BE (remplace CCB)
+    "actiris": ActirisScraper,                 # Sprint 2 — service public emploi Bruxelles (sitemap + détail)
 }
 
 

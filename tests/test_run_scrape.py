@@ -29,7 +29,8 @@ def no_sleep(monkeypatch):
 
 
 def test_registry_contains_all_active_sources():
-    expected = {"remotive", "nviso", "itsme", "easi", "smals", "cream", "travaillerpour"}
+    expected = {"remotive", "nviso", "itsme", "easi", "smals", "cream",
+                "travaillerpour", "actiris"}
     assert set(SCRAPER_FACTORIES.keys()) == expected
 
 
@@ -108,6 +109,9 @@ def test_run_scrape_full_e2e(tmp_path: Path):
         "https://travaillerpour.be/fr/jobs",
         params={"f[0]": "lang:fr", "page": "0"},
     ).mock(return_value=httpx.Response(200, text="<html></html>"))
+    respx.get("https://www.actiris.brussels/sitemapoffers-fr.xml").mock(
+        return_value=httpx.Response(200, text='<?xml version="1.0"?><urlset></urlset>')
+    )
 
     db_path = tmp_path / "e2e.db"
     db_url = f"sqlite:///{db_path}"

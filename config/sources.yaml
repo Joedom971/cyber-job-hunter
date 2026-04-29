@@ -77,6 +77,16 @@ sources:
     max_pages: 10
     notes: "Portail emplois fédéraux BE (Drupal). Remplace CCB/EGov : inclut FOD/SPF, NCCN, etc."
 
+  actiris:
+    enabled: true
+    type: html
+    base_url: "https://www.actiris.brussels/sitemapoffers-fr.xml"
+    company_name_override: "Actiris (offre publique)"
+    country_default: BE
+    max_pages: 2
+    rate_limit_seconds: 3
+    notes: "Service emploi Bruxelles. Sitemap public 9000+ offres ; on scrape les 40 plus récentes par run (max_pages=2 × 20)."
+
 # ─── Sprint 2+ — planifiés (désactivés) ────────────────────────────────
 planned_sources:
 
