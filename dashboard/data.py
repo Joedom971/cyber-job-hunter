@@ -10,11 +10,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from typing import Any
 
-from sqlmodel import Session, select
+from sqlalchemy import text
+from sqlmodel import Session
 
 from src.config import Profile
-from src.models import Job, ScoreResult
 from src.storage import JobRepository
 
 
@@ -59,47 +60,118 @@ def _enum_str(value) -> str:  # type: ignore[no-untyped-def]
 
 
 def load_all_jobs_with_latest_score(repo: JobRepository) -> list[JobRow]:
-    with repo.session() as session:
-        jobs = list(_run(session, select(Job)).all())
-        all_scores = list(_run(session, select(ScoreResult)).all())
+    """Charge jobs + dernier score via raw SQL pour bypasser la coercion enum SQLAlchemy.
 
-    scores_by_job: dict[int, ScoreResult] = {}
-    for sr in all_scores:
-        current = scores_by_job.get(sr.job_id)
-        if current is None or sr.computed_at > current.computed_at:
-            scores_by_job[sr.job_id] = sr
+    Pourquoi raw SQL : si un nouveau scraper est ajouté à `JobSource` mais que
+    le process Python en cours (ex: Streamlit) a importé l'enum AVANT, la
+    deserialization SQLAlchemy crash sur les valeurs inconnues. Le raw SQL
+    récupère les valeurs en str et notre code les normalise via `_enum_str`.
+    """
+    job_sql = text("""
+        SELECT id, source, external_id, title, company, location, country,
+               description, url, content_hash, posted_at,
+               first_seen_at, last_seen_at, scraped_at, is_active,
+               raw_data
+        FROM job
+    """)
+    score_sql = text("""
+        SELECT id, job_id, score, raw_score, is_rejected,
+               rejection_reasons, matched_keywords, breakdown, computed_at
+        FROM scoreresult
+    """)
+
+    with repo.session() as session:
+        job_rows = session.exec(job_sql).all()  # type: ignore[arg-type]
+        score_rows = session.exec(score_sql).all()  # type: ignore[arg-type]
+
+    # Pré-calcule le dernier score par job_id (par computed_at desc)
+    latest_score_by_job: dict[int, dict[str, Any]] = {}
+    for sr in score_rows:
+        sr_dict = dict(sr._mapping)  # type: ignore[attr-defined]
+        existing = latest_score_by_job.get(sr_dict["job_id"])
+        if existing is None or sr_dict["computed_at"] > existing["computed_at"]:
+            latest_score_by_job[sr_dict["job_id"]] = sr_dict
 
     rows: list[JobRow] = []
-    for job in jobs:
-        if job.id is None:
+    for jr in job_rows:
+        j = dict(jr._mapping)  # type: ignore[attr-defined]
+        if j.get("id") is None:
             continue
-        sr = scores_by_job.get(job.id)
+        sr_d = latest_score_by_job.get(j["id"])
+
+        rejection_reasons_raw = _coerce_list(sr_d.get("rejection_reasons") if sr_d else [])
+        matched_keywords_raw = _coerce_list(sr_d.get("matched_keywords") if sr_d else [])
+        breakdown_raw = _coerce_list(sr_d.get("breakdown") if sr_d else [])
+        raw_data_raw = _coerce_dict(j.get("raw_data") or {})
+
         rows.append(
             JobRow(
-                id=job.id,
-                source=_enum_str(job.source),
-                company=job.company,
-                title=job.title,
-                location=job.location or "",
-                country=_enum_str(job.country),
-                url=job.url,
-                description=job.description or "",
-                score=sr.score if sr else 0,
-                is_rejected=sr.is_rejected if sr else False,
-                is_active=job.is_active,
-                rejection_reasons=[
-                    _enum_str(r) for r in (sr.rejection_reasons if sr else [])
-                ],
-                matched_keywords=list(sr.matched_keywords) if sr else [],
-                breakdown=list(sr.breakdown) if sr else [],
-                raw_data=dict(job.raw_data) if job.raw_data else {},
-                first_seen_at=job.first_seen_at,
-                last_seen_at=job.last_seen_at,
-                scraped_at=job.scraped_at,
-                posted_at=job.posted_at,
+                id=j["id"],
+                source=_enum_str(j.get("source")),
+                company=j.get("company") or "",
+                title=j.get("title") or "",
+                location=j.get("location") or "",
+                country=_enum_str(j.get("country")),
+                url=j.get("url") or "",
+                description=j.get("description") or "",
+                score=int(sr_d["score"]) if sr_d else 0,
+                is_rejected=bool(sr_d["is_rejected"]) if sr_d else False,
+                is_active=bool(j.get("is_active", True)),
+                rejection_reasons=[_enum_str(r) for r in rejection_reasons_raw],
+                matched_keywords=list(matched_keywords_raw),
+                breakdown=list(breakdown_raw),
+                raw_data=raw_data_raw,
+                first_seen_at=_coerce_datetime(j.get("first_seen_at")),
+                last_seen_at=_coerce_datetime(j.get("last_seen_at")),
+                scraped_at=_coerce_datetime(j.get("scraped_at")),
+                posted_at=_coerce_datetime(j.get("posted_at"), default=None),
             )
         )
     return rows
+
+
+def _coerce_list(value):  # type: ignore[no-untyped-def]
+    """SQLite stocke les JSON en str ; on désérialise si besoin."""
+    if value is None:
+        return []
+    if isinstance(value, list):
+        return value
+    if isinstance(value, str):
+        import json
+
+        try:
+            return json.loads(value)
+        except json.JSONDecodeError:
+            return []
+    return []
+
+
+def _coerce_dict(value):  # type: ignore[no-untyped-def]
+    if value is None:
+        return {}
+    if isinstance(value, dict):
+        return value
+    if isinstance(value, str):
+        import json
+
+        try:
+            return json.loads(value)
+        except json.JSONDecodeError:
+            return {}
+    return {}
+
+
+def _coerce_datetime(value, default=None):  # type: ignore[no-untyped-def]
+    if value is None:
+        return default
+    if isinstance(value, datetime):
+        return value
+    if isinstance(value, str):
+        try:
+            return datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except ValueError:
+            return default
+    return default
 
 
 def filter_rows(
