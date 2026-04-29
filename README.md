@@ -4,8 +4,8 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)](pyproject.toml)
-[![Tests](https://img.shields.io/badge/tests-268%20passing-brightgreen.svg)](tests/)
-[![Coverage](https://img.shields.io/badge/coverage-82%25-brightgreen.svg)](tests/)
+[![Tests](https://img.shields.io/badge/tests-307%20passing-brightgreen.svg)](tests/)
+[![Coverage](https://img.shields.io/badge/coverage-91%25-brightgreen.svg)](tests/)
 [![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-black.svg)](pyproject.toml)
 [![Type-checked: mypy strict](https://img.shields.io/badge/type--checked-mypy%20strict-blue.svg)](pyproject.toml)
 [![Status](https://img.shields.io/badge/status-Sprint%202%20%E2%9C%85-success)](#-roadmap)
@@ -23,14 +23,14 @@ Il sert deux objectifs :
 
 ## ✨ Fonctionnalités
 
-- 🕷️ **8 scrapers** actifs sur les sources cyber BE/LU/Remote (cyber pure-players, ESN, services publics)
+- 🕷️ **13 scrapers** actifs sur les sources cyber BE/LU/Remote (cyber pure-players, ESN, services publics, Big Four, Workday/RSS/REST/HTML)
 - 🎯 **Scoring personnalisable** avec 60+ titres cibles, 7 catégories de mots-clés tech, et un *cyber relevance gate* qui élimine les offres non-cyber
 - 📊 **Dashboard Streamlit** local avec 3 vues (Liste / Détail / Stats), 10+ filtres, et accès distant via Tailscale
 - 🆕 **Détection des nouvelles offres** (badge "Nouveau" depuis le run précédent, table `ScrapeRun` historique)
 - 🛡️ **10 protections anti-ban** mutualisées dans `BaseScraper` : rate limit, jitter, backoff exponentiel, circuit breaker, détection captcha/Cloudflare, respect `robots.txt`
 - 💾 **Storage SQLite** avec dédoublonnage par hash de contenu et soft delete
 - 📁 **Export CSV** filtrable par score
-- ✅ **268 tests** (94 % de coverage hors UI Streamlit), `mypy` strict, `ruff`
+- ✅ **307 tests** (91 % de coverage hors UI Streamlit), `mypy` strict, `ruff`
 
 ## 📸 Screenshots
 
@@ -70,12 +70,14 @@ Sous-onglets `Scores` (histogramme), `Sources & pays` (bar charts), `Rejets` (to
                 │ │ inherits                          │
                 ▼ │                                   ▼
     ┌──────────────────────────┐         ┌──────────────────────┐
-    │  REST/RSS scrapers        │         │  HTML scrapers       │
+    │  REST/RSS/Workday scrapers│         │  HTML scrapers       │
     │  • Remotive (REST JSON)   │         │  • NVISO (utility)   │
-    │  • Recruitee (NVISO/itsme)│         │  • EASI / Smals      │
-    └────────────┬──────────────┘         │  • Cream / Travailler│
-                 │                        │  • Actiris (sitemap) │
-                 │                        └─────────┬────────────┘
+    │  • Recruitee (itsme)      │         │  • EASI / Smals      │
+    │  • Devoteam (GCP Talent)  │         │  • Cream / Travailler│
+    │  • Capgemini (REST Azure) │         │  • Actiris (sitemap) │
+    │  • KPMG (RSS TalentSoft)  │         │  • Orange Cyberdef.  │
+    │  • Accenture (Workday CXS)│         │    (TeamTailor)      │
+    └────────────┬──────────────┘         └─────────┬────────────┘
                  │                                  │
                  └──────────────┬───────────────────┘
                                 │
@@ -136,18 +138,23 @@ Sous-onglets `Scores` (histogramme), `Sources & pays` (bar charts), `Rejets` (to
 
 Profil complet et tunable dans [`config/profile.yaml`](config/profile.yaml).
 
-## 📊 Sources actives (Sprint 2)
+## 📊 Sources actives (Sprints 1+2)
 
 | Source | Type | Pays | Volume | Notes |
 |---|---|---|---|---|
 | [Remotive](https://remotive.com) | REST JSON | Remote | ~20 | TOS strictes (4 req/jour, attribution requise) |
 | [NVISO](https://nviso.eu/jobs/) | HTML utility-class | BE/DE/GR/AT | ~36 | Cyber pure-player BE — quitté Recruitee 2026-04 |
 | [itsme®](https://itsme-id.com) | Recruitee API | BE | ~8 | Scale-up identité digitale Brussels |
-| [EASI](https://easi.net/en/jobs) | HTML | BE | ~35 | ESN BE, Wallonie/Flandre |
+| [EASI](https://easi.net/en/jobs) | HTML | BE | ~36 | ESN BE, Wallonie/Flandre |
 | [Smals](https://www.smals.be/en/jobs/list) | HTML Drupal | BE | ~71 | ICT sécurité sociale BE, listing par catégorie |
 | [Cream by Audensiel](https://www.creamconsulting.com/jobs) | HTML | LU | ~14 | ESN cyber Luxembourg |
 | [Travaillerpour.be](https://travaillerpour.be/fr/jobs) | HTML Drupal paginé | BE | ~37 | Portail emplois fédéraux BE (FOD/SPF, NCCN) |
 | [Actiris](https://www.actiris.brussels) | XML sitemap + HTML | BE | 40 (les + récentes) | Service emploi Bruxelles, 9000+ offres au total |
+| [Accenture](https://www.accenture.com/be-en/careers) | Workday CXS API | BE | ~7 | Filtre BE via facet `locationCountry` |
+| [KPMG Belgium](https://kpmg-career.talent-soft.com) | RSS TalentSoft | BE | ~20 | Tous métiers, scoring filtre cyber |
+| [Capgemini](https://www.capgemini.com/be-en/jobs) | REST API Azure | BE | ~9 | `country=be-en&search=cyber` pré-appliqué |
+| [Orange Cyberdefense](https://jobs.orangecyberdefense.com) | HTML TeamTailor | BE/EU | ~20 | Listing + enrichissement page détail |
+| [Devoteam](https://www.devoteam.com/jobs) | REST GCP Cloud Talent | BE | ~49 | Filtre BE natif via param `country=Belgium` |
 
 ### Sources évaluées et reportées (avec raisons documentées dans `config/sources.yaml`)
 
@@ -156,7 +163,7 @@ Profil complet et tunable dans [`config/profile.yaml`](config/profile.yaml).
 - **cybersecurity.lu** → SPA React, pas d'API JSON publique
 - **Spotit / Moovijob.lu** → protégés Cloudflare
 - **CERT-EU** → clearance EU SECRET requise (ROI faible pour stage junior)
-- **Workday** (Proximus, Accenture, Sopra Steria) → reporté Sprint 3+ (chacun a son ATS custom)
+- **Workday** (Proximus, Sopra Steria) → reporté Sprint 3+ (Accenture désormais actif via CXS API)
 - **LinkedIn** → reporté Sprint 4 avec safeguards stricts (ToS)
 
 ## 🧠 Scoring
@@ -212,7 +219,7 @@ cp .env.example .env  # éditer si besoin
 # 4. Init la DB SQLite
 python scripts/init_db.py
 
-# 5. Lancer un premier scrape (les 8 sources actives)
+# 5. Lancer un premier scrape (les 13 sources actives)
 python scripts/run_scrape.py
 # OU sélectionner une source seulement :
 python scripts/run_scrape.py --source nviso,smals
@@ -250,7 +257,7 @@ pytest --cov=src --cov=dashboard --cov-report=term-missing
 pytest tests/test_scoring.py -v
 ```
 
-Stats : **268 tests passants, 94 % coverage** (hors UI Streamlit).
+Stats : **307 tests passants, 91 % coverage** (hors UI Streamlit).
 
 ## 📁 Structure du projet
 
@@ -293,14 +300,14 @@ cyber-job-hunter/
 │   ├── run_scrape.py      · orchestrateur principal
 │   └── export_csv.py
 └── tests/
-    └── test_*.py          · 268 tests, respx pour mocks HTTP
+    └── test_*.py          · 307 tests, respx pour mocks HTTP
 ```
 
 ## 🗺️ Roadmap
 
 - ✅ **Sprint 1** *(2026-04-29)* — Bootstrap, modèles, scoring, filters, storage SQLite, 4 scrapers, 173 tests
-- ✅ **Sprint 2** *(2026-04-29)* — Dashboard Streamlit (3 tabs, 10+ filtres), détection nouvelles offres, +4 scrapers (Smals, Cream, Travaillerpour, Actiris), cyber relevance gate, 268 tests
-- 🟡 **Sprint 3** *(à venir)* — Email digest Gmail SMTP + cron launchd, +Forem/StepStone/Jobat (selon ToS), Workday paramétré (Proximus/Accenture/Sopra Steria via inspection devtools)
+- ✅ **Sprint 2** *(2026-04-29)* — Dashboard Streamlit (3 tabs, 10+ filtres), détection nouvelles offres, +9 scrapers (Smals, Cream, Travaillerpour, Actiris, Accenture/Workday, KPMG/RSS, Capgemini/REST, Orange Cyberdefense, Devoteam/GCP), cyber relevance gate, helper `clean_html_to_text` pour préserver paragraphes/listes, 307 tests
+- 🟡 **Sprint 3** *(à venir)* — Email digest Gmail SMTP + cron launchd, +Forem/StepStone/Jobat (selon ToS), Workday Proximus/Sopra Steria via inspection devtools, banques BE/LU
 - 🟡 **Sprint 4** *(à venir)* — Génération de lettres de motivation (via API LLM tierce), LinkedIn avec safeguards stricts, scoring ML basé feedbacks 👍/👎
 
 ## ⚠️ Sécurité
