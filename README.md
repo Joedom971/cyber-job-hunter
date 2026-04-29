@@ -32,6 +32,26 @@ Il sert deux objectifs :
 - 📁 **Export CSV** filtrable par score
 - ✅ **268 tests** (94 % de coverage hors UI Streamlit), `mypy` strict, `ruff`
 
+## 📸 Screenshots
+
+### Tab Liste — Top 5 des offres + tableau filtrable
+
+Vue principale avec sidebar (stats globales + 10 filtres : score, sources, pays, catégories cyber, keywords, "Découvert depuis", "Uniquement les nouvelles") et tableau triable. Le top 5 cartes met en avant les meilleures offres du moment.
+
+![Tab Liste — Top 5 des offres](docs/screenshots/01-listing.png)
+
+### Tab Détail — Breakdown explicable du scoring
+
+Pour chaque offre sélectionnée : score + métadonnées timeline (découverte, dernier scrape, publication), **breakdown ligne par ligne** des règles de scoring avec leurs points (target_title +30, junior +15, location_country_fallback +5, etc.), keywords matchés, raisons de rejet éventuelles, description complète et raw_data brut JSON repliable. Transparence totale sur le « pourquoi ce score ».
+
+![Tab Détail — Breakdown du score](docs/screenshots/02-detail.png)
+
+### Tab Stats — Distribution par source et par pays
+
+Sous-onglets `Scores` (histogramme), `Sources & pays` (bar charts), `Rejets` (top raisons), `Keywords` (top 15 cyber matchés). Permet d'auditer le scoring et de visualiser la couverture du marché.
+
+![Tab Stats — Distribution sources et pays](docs/screenshots/03-stats.png)
+
 ## 🏗️ Architecture
 
 ```
