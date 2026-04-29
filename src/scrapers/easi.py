@@ -27,6 +27,11 @@ from src.scrapers.base import BaseScraper, ScrapeError
 
 
 _DEFAULT_COMPANY = "EASI"
+_DETAIL_SELECTORS: tuple[str, ...] = (
+    "main",
+    "article",
+    "div.entry-content",
+)
 
 
 def _slug_from_href(href: str) -> str:
@@ -88,6 +93,7 @@ class EasiScraper(BaseScraper):
             jobs.append(parsed)
 
         logger.info("[{}] HTML had {} items, {} parsed", self.name, len(items), len(jobs))
+        jobs = self._enrich_descriptions(jobs, _DETAIL_SELECTORS)
         return jobs, False
 
     def _parse_item(self, item) -> JobBase | None:  # type: ignore[no-untyped-def]

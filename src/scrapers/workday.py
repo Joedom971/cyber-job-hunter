@@ -19,6 +19,7 @@ import re
 from collections.abc import Iterable
 from typing import Any, ClassVar
 
+from bs4 import BeautifulSoup
 from loguru import logger
 
 from src.config import SourceConfig
@@ -142,7 +143,47 @@ class WorkdayScraper(BaseScraper):
             "[{}] page {} (offset {}): {}/{} parsed (total={}, has_next={})",
             self.name, page, offset, len(jobs), len(raw), total, has_next,
         )
+        # Enrichit avec la description complète depuis l'API CXS de chaque offre.
+        # On utilise un endpoint distinct du listing : /wday/cxs/{tenant}/{site}{externalPath}
+        jobs = self._enrich_workday_descriptions(jobs)
         return jobs, has_next
+
+    def _enrich_workday_descriptions(self, jobs: list[JobBase]) -> list[JobBase]:
+        """Pour chaque job, fetch l'API détail Workday et extrait jobDescription."""
+        api_base = (
+            f"https://{self._workday_host}/wday/cxs/"
+            f"{self._workday_tenant}/{self._workday_site}"
+        )
+        for job in jobs:
+            ext_path = job.raw_data.get("externalPath") or ""
+            if not ext_path:
+                continue
+            detail_url = api_base + ext_path
+            try:
+                response = self._http_get(detail_url)
+            except Exception as e:  # noqa: BLE001
+                logger.debug(
+                    "[{}] detail API failed for {}: {}", self.name, job.external_id, e
+                )
+                continue
+
+            try:
+                data = response.json()
+            except ValueError:
+                continue
+
+            posting = data.get("jobPostingInfo") or {}
+            html_desc = posting.get("jobDescription") or ""
+            if not html_desc:
+                continue
+            try:
+                soup = BeautifulSoup(html_desc, "lxml")
+                text = soup.get_text(separator=" ", strip=True)
+            except Exception:  # noqa: BLE001
+                continue
+            if len(text) >= 200:
+                job.description = text[:8000]
+        return jobs
 
     def _parse_posting(self, posting: dict[str, Any]) -> JobBase | None:
         title = posting.get("title")
