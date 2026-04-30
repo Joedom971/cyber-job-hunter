@@ -13,16 +13,21 @@ Le scraper reste "bête" : il remonte tout, le scoring filtre cyber côté aval.
 
 from __future__ import annotations
 
-import json
 import re
 from collections.abc import Iterable
-from typing import Any, ClassVar
+from typing import ClassVar
 
 from bs4 import BeautifulSoup
 from loguru import logger
 
 from src.models import Country, JobBase, JobSource
-from src.scrapers.base import BaseScraper, ScrapeError, clean_html_to_text
+from src.scrapers.base import (
+    BaseScraper,
+    ScrapeError,
+    clean_html_to_text,
+    extract_city_from_jsonld_location,
+    extract_jobposting_jsonld,
+)
 
 
 _DEFAULT_COMPANY = "Sopra Steria Belgium"
@@ -105,7 +110,7 @@ class SopraSteriaScraper(BaseScraper):
                 )
                 continue
 
-            posting = _extract_jobposting_jsonld(response.text)
+            posting = extract_jobposting_jsonld(response.text)
             if posting is None:
                 continue
 
@@ -119,7 +124,7 @@ class SopraSteriaScraper(BaseScraper):
             if isinstance(org, dict) and org.get("name"):
                 job.company = org["name"]
 
-            location = _extract_city(posting.get("jobLocation"))
+            location = extract_city_from_jsonld_location(posting.get("jobLocation"))
             if location:
                 job.location = location
 
@@ -128,40 +133,3 @@ class SopraSteriaScraper(BaseScraper):
                 job.raw_data["date_posted"] = date_posted
 
         return jobs
-
-
-def _extract_jobposting_jsonld(html: str) -> dict[str, Any] | None:
-    """Récupère le premier bloc JSON-LD `@type=JobPosting`."""
-    soup = BeautifulSoup(html, "lxml")
-    for script in soup.find_all("script", type="application/ld+json"):
-        raw = script.string or script.get_text() or ""
-        if not raw.strip():
-            continue
-        try:
-            data = json.loads(raw)
-        except (ValueError, json.JSONDecodeError):
-            continue
-        candidates = data if isinstance(data, list) else [data]
-        for item in candidates:
-            if isinstance(item, dict) and item.get("@type") == "JobPosting":
-                return item
-    return None
-
-
-def _extract_city(job_location: Any) -> str | None:
-    """Extrait `addressLocality` depuis jobLocation (peut être dict ou list)."""
-    if not job_location:
-        return None
-    if isinstance(job_location, list):
-        for entry in job_location:
-            city = _extract_city(entry)
-            if city:
-                return city
-        return None
-    if isinstance(job_location, dict):
-        address = job_location.get("address") or {}
-        if isinstance(address, dict):
-            city = address.get("addressLocality")
-            if city and isinstance(city, str):
-                return city.strip() or None
-    return None

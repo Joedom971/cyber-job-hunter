@@ -41,6 +41,70 @@ _BLOCK_TAGS = (
 )
 
 
+def extract_jobposting_jsonld(html: str) -> dict | None:
+    """Récupère le premier bloc JSON-LD `@type=JobPosting` d'une page HTML.
+
+    Schema.org `JobPosting` est un format standardisé que beaucoup d'ATS
+    (Sopra Steria, Nexova, EPAM, Workday HTML…) embarquent dans leurs
+    pages détail. Il contient typiquement :
+        - title, description (HTML), datePosted, validThrough
+        - hiringOrganization.name
+        - jobLocation.address.addressLocality / addressCountry
+        - identifier (souvent une référence interne)
+
+    Renvoie le dict du premier JobPosting trouvé, ou None.
+    Gère :
+        - bloc `<script type="application/ld+json">` simple
+        - bloc avec `@graph: [...]` (plusieurs entités empaquetées)
+        - bloc qui est une liste JSON racine
+    """
+    if not html:
+        return None
+    import json as _json
+    from bs4 import BeautifulSoup  # noqa: PLC0415
+
+    soup = BeautifulSoup(html, "lxml")
+    for script in soup.find_all("script", type="application/ld+json"):
+        raw = script.string or script.get_text() or ""
+        if not raw.strip():
+            continue
+        try:
+            data = _json.loads(raw)
+        except (ValueError, _json.JSONDecodeError):
+            continue
+        # Forme racine = liste
+        candidates = data if isinstance(data, list) else [data]
+        for item in candidates:
+            if not isinstance(item, dict):
+                continue
+            if item.get("@type") == "JobPosting":
+                return item
+            # Forme @graph: [{...}, {...}]
+            for sub in item.get("@graph", []) or []:
+                if isinstance(sub, dict) and sub.get("@type") == "JobPosting":
+                    return sub
+    return None
+
+
+def extract_city_from_jsonld_location(job_location) -> str | None:  # type: ignore[no-untyped-def]
+    """Extrait `addressLocality` depuis `jobLocation` (peut être dict ou list)."""
+    if not job_location:
+        return None
+    if isinstance(job_location, list):
+        for entry in job_location:
+            city = extract_city_from_jsonld_location(entry)
+            if city:
+                return city
+        return None
+    if isinstance(job_location, dict):
+        address = job_location.get("address") or {}
+        if isinstance(address, dict):
+            city = address.get("addressLocality")
+            if city and isinstance(city, str):
+                return city.strip() or None
+    return None
+
+
 def clean_html_to_text(html: str) -> str:
     """Convertit un fragment HTML en texte plat **en préservant la structure**.
 
