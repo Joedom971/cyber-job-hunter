@@ -74,7 +74,7 @@ def render(
         ]
     )
 
-    st.dataframe(
+    event = st.dataframe(
         df,
         use_container_width=True,
         hide_index=True,
@@ -91,4 +91,21 @@ def render(
             "Société": st.column_config.TextColumn(width="small"),
             "Découvert": st.column_config.TextColumn(width="small"),
         },
+        on_select="rerun",
+        selection_mode="single-row",
+        key="listing_dataframe",
     )
+
+    # Synchronise la sélection avec l'onglet Détail (clé partagée avec le selectbox).
+    # Streamlit ne permet pas de basculer d'onglet par code : un message guide l'utilisateur.
+    selected_rows = (event.selection.rows if event and event.selection else []) or []
+    if selected_rows:
+        idx = selected_rows[0]
+        if 0 <= idx < len(filtered_rows):
+            picked = filtered_rows[idx]
+            st.session_state["detail_selected_id"] = picked
+            st.info(
+                f"✨ **{picked.title}** sélectionnée — clique sur l'onglet "
+                f"**🔎 Détail** ci-dessus pour voir le breakdown complet.",
+                icon="👉",
+            )
