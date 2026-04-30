@@ -16,6 +16,7 @@ from src.scrapers.cream import CreamScraper
 from src.scrapers.devoteam import DevoteamScraper
 from src.scrapers.easi import EasiScraper
 from src.scrapers.kpmg import KpmgScraper
+from src.scrapers.nexova import NexovaScraper
 from src.scrapers.orange_cyberdefense import OrangeCyberdefenseScraper
 from src.scrapers.nviso import NvisoScraper
 from src.scrapers.recruitee import build_itsme_scraper
@@ -42,6 +43,7 @@ SCRAPER_FACTORIES: dict[str, ScraperFactory] = {
     "orange_cyberdefense": OrangeCyberdefenseScraper,  # Sprint 2+ — TeamTailor HTML
     "devoteam": DevoteamScraper,                # Sprint 2+ — HTML listing multi-pays (FR/BE/LU)
     "sopra_steria": SopraSteriaScraper,         # Sprint 3 — Attrax HTML + JSON-LD JobPosting
+    "nexova": NexovaScraper,                    # Sprint 3 — pure-player cyber/défense BE (ESA Redu)
 }
 
 

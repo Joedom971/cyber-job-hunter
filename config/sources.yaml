@@ -147,6 +147,16 @@ sources:
     rate_limit_seconds: 3
     notes: "Attrax (Lumesse) HTML + JSON-LD JobPosting sur chaque détail. Sopra Steria global utilise Attrax aussi mais le subdomain .be filtre déjà BE."
 
+  nexova:
+    enabled: true
+    type: html
+    base_url: "https://www.nexovagroup.eu/en/job-vacancies"
+    company_name_override: "Nexova Group"
+    country_default: BE
+    max_pages: 1  # ~7 offres actives sur la page listing
+    rate_limit_seconds: 3
+    notes: "Pure-player cyber/défense BE, ESA-Redu SOC. HTML statique + JSON-LD JobPosting (avec @graph) sur chaque détail."
+
 # ─── Sprint 2+ — planifiés (désactivés) ────────────────────────────────
 planned_sources:
 

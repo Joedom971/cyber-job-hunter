@@ -40,6 +40,7 @@ class JobSource(StrEnum):
     ORANGE_CYBERDEFENSE = "orange_cyberdefense"
     DEVOTEAM = "devoteam"
     SOPRA_STERIA = "sopra_steria"
+    NEXOVA = "nexova"
     # Étendu en Sprint 3+
     OTHER = "other"
 
