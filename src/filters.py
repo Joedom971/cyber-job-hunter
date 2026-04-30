@@ -80,31 +80,93 @@ def detect_dutch_requirement(text: str, profile: Profile) -> tuple[bool, str | N
     return True, matched
 
 
-def detect_seniority(text: str, profile: Profile) -> list[tuple[RejectReason, str]]:
-    """Détecte tous les patterns de seniority/expérience qui matchent.
+# ─── Whitelist sociétés 100 % cyber → bypass `not_cyber_relevant` ─────────
+# Critère : société dont *toutes* les offres sont par nature cyber. On
+# accepte donc les offres dont la description met l'accent sur soft skills,
+# management ou business sans mention explicite de keywords cyber. Pas
+# d'ESN généraliste (Capgemini, Devoteam) qui ont aussi des offres
+# banking/dev/data sans rapport.
+_CYBER_PUREPLAYER_COMPANIES: tuple[str, ...] = (
+    # NVISO uniquement : pure-player BE sans branche IT/sales/admin.
+    # Cream & Orange Cyberdefense exclus car ils ont des fonctions support
+    # (.NET dev, sales, réceptionniste) qui ne devraient pas bypasser le gate.
+    # Ajoutera Toreon, Approach, Spotit quand on aura les scrapers.
+    "nviso",
+)
+
+
+def _is_cyber_pureplayer(company: str | None) -> bool:
+    if not company:
+        return False
+    lc = company.lower()
+    return any(name in lc for name in _CYBER_PUREPLAYER_COMPANIES)
+
+
+# ─── Bypass `senior` sur titres explicitement juniors ─────────────────────
+# Un titre "Junior X Lead Program" déclencherait `\blead\b` à tort. Si le
+# titre clame junior/intern/trainee/graduate, on ignore les patterns de
+# niveau (senior/lead/manager/principal) — ils sont sémantiquement
+# contradictoires avec un poste junior.
+_JUNIOR_TITLE_RE = re.compile(
+    r"\b(junior|jr|intern|internship|trainee|graduate|stagiaire|stage|alternance|alternant)\b",
+    re.IGNORECASE,
+)
+
+
+def _title_says_junior(title: str) -> bool:
+    return bool(title and _JUNIOR_TITLE_RE.search(title))
+
+
+_SENIORITY_TITLE_KEYWORDS = ("senior", "lead", "manager", "principal")
+
+
+def _is_title_only_pattern(raw_pattern: str) -> bool:
+    """True si le pattern cible un signal de niveau (à scanner sur titre seul).
+
+    Les patterns "senior\\b", "\\blead\\b", "\\bmanager\\b", "\\bprincipal\\b",
+    "team\\s+lead" décrivent des titres de poste (Senior Consultant, Tech
+    Lead…). Les appliquer à la description génère des faux positifs sur
+    des verbes ou des termes courants — ex. "people **lead** their digital
+    lives", "package **manager**", "**senior** management endorsement".
+    """
+    lp = raw_pattern.lower()
+    return any(kw in lp for kw in _SENIORITY_TITLE_KEYWORDS)
+
+
+def detect_seniority(
+    title: str, full_text: str, profile: Profile
+) -> list[tuple[RejectReason, str]]:
+    """Détecte les patterns de seniority/expérience qui matchent.
 
     Sépare en 2 catégories :
-        - `SENIOR_REQUIRED` : senior, lead, manager, team lead
+        - `SENIOR_REQUIRED` : senior, lead, manager, principal, team lead
+            → scan **titre uniquement** (les mots tombent souvent comme verbes
+            ou expressions transverses dans la description).
         - `EXPERIENCE_5Y`   : 5+ years, minimum 5, etc.
+            → scan **texte complet** (la mention d'années peut être en titre
+            ou en description).
 
     Retourne une liste car une offre peut cumuler les deux signaux
-    (ex: "Lead Engineer · 5+ years experience" → 2 raisons distinctes).
+    (ex: titre "Lead Engineer" + description "5+ years experience").
     """
-    if not text:
-        return []
-
-    seniority_keywords = ("senior", "lead", "manager")
     found: list[tuple[RejectReason, str]] = []
     seen_reasons: set[RejectReason] = set()
+    bypass_seniority = _title_says_junior(title)
 
     for raw_pattern in profile.experience.reject_patterns:
-        if not re.search(raw_pattern, text, re.IGNORECASE):
+        if _is_title_only_pattern(raw_pattern):
+            if bypass_seniority:
+                # Titre explicitement junior/intern → "Lead", "Manager"
+                # ne sont PAS des signaux de niveau ici.
+                continue
+            scan_text = title
+            reason = RejectReason.SENIOR_REQUIRED
+        else:
+            scan_text = full_text
+            reason = RejectReason.EXPERIENCE_5Y
+
+        if not scan_text or not re.search(raw_pattern, scan_text, re.IGNORECASE):
             continue
-        reason = (
-            RejectReason.SENIOR_REQUIRED
-            if any(kw in raw_pattern.lower() for kw in seniority_keywords)
-            else RejectReason.EXPERIENCE_5Y
-        )
         if reason in seen_reasons:
             continue
         seen_reasons.add(reason)
@@ -121,9 +183,17 @@ def detect_not_cyber_relevance(
     - un `target_title` apparaît dans le titre
     - un `technical_keyword` (toutes catégories) apparaît dans titre+description
 
+    **Bypass** : pour les sociétés 100 % cyber pure-player (NVISO, Orange
+    Cyberdefense, Cream Consulting), on considère que toutes leurs offres
+    sont par nature cyber — même celles dont la description met l'accent
+    sur le management ou les soft skills sans mot-clé tech.
+
     Mots-clés < 4 chars exclus de la détection (anti-faux-positifs : 'soc' matche
     'social', 'ssl' matche 'classy', etc.). Word-boundary regex utilisé.
     """
+    if _is_cyber_pureplayer(job.company):
+        return False, None
+
     cyber_terms: list[str] = []
     cyber_terms.extend(profile.target_titles)
     cyber_terms.extend(profile.technical_keywords.all_flat)
@@ -199,7 +269,7 @@ def apply_filters(job: JobBase, profile: Profile) -> FilterResult:
     matched: dict[str, str] = {}
 
     # Seniority / 5+ years (peut cumuler les deux)
-    for reason, pattern in detect_seniority(full_text, profile):
+    for reason, pattern in detect_seniority(job.title, full_text, profile):
         reasons.append(reason)
         matched[reason.value] = pattern
 

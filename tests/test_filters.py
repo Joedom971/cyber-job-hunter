@@ -43,38 +43,158 @@ def _make_job(
 
 
 @pytest.mark.parametrize(
-    "text,expected",
+    "title,full_text,expected",
     [
-        ("Senior SOC Analyst", RejectReason.SENIOR_REQUIRED),
-        ("Lead Detection Engineer", RejectReason.SENIOR_REQUIRED),
-        ("IT Manager Cybersecurity", RejectReason.SENIOR_REQUIRED),
-        ("Team Lead Blue Team", RejectReason.SENIOR_REQUIRED),
-        ("Looking for 5+ years experience", RejectReason.EXPERIENCE_5Y),
-        ("Minimum 5 years in cyber required", RejectReason.EXPERIENCE_5Y),
-        ("At least 5 years of SOC experience", RejectReason.EXPERIENCE_5Y),
-        ("5-7 years in incident response", RejectReason.EXPERIENCE_5Y),
+        # Niveau dans le titre → SENIOR_REQUIRED
+        ("Senior SOC Analyst", "Senior SOC Analyst", RejectReason.SENIOR_REQUIRED),
+        ("Lead Detection Engineer", "Lead Detection Engineer", RejectReason.SENIOR_REQUIRED),
+        ("IT Manager Cybersecurity", "IT Manager Cybersecurity", RejectReason.SENIOR_REQUIRED),
+        ("Team Lead Blue Team", "Team Lead Blue Team", RejectReason.SENIOR_REQUIRED),
+        # Expérience dans description → EXPERIENCE_5Y (texte complet scanné)
+        ("Cyber Analyst", "Looking for 5+ years experience", RejectReason.EXPERIENCE_5Y),
+        ("Cyber Analyst", "Minimum 5 years in cyber required", RejectReason.EXPERIENCE_5Y),
+        ("Cyber Analyst", "At least 5 years of SOC experience", RejectReason.EXPERIENCE_5Y),
+        ("Cyber Analyst", "5-7 years in incident response", RejectReason.EXPERIENCE_5Y),
     ],
 )
-def test_detect_seniority_rejects(profile, text, expected):
-    matches = detect_seniority(text, profile)
+def test_detect_seniority_rejects(profile, title, full_text, expected):
+    matches = detect_seniority(title, full_text, profile)
     assert len(matches) >= 1
     assert any(reason is expected for reason, _ in matches)
 
 
 @pytest.mark.parametrize(
-    "text",
+    "title,full_text",
     [
-        "Junior SOC Analyst",
-        "Cybersecurity Trainee",
-        "0-2 years experience",
-        "Young Graduate Program",
-        "",
-        "A senatorial role in IT",  # 'senior' contenu dans 'senatorial' → \bsenior\b ne match pas
+        ("Junior SOC Analyst", "Junior SOC Analyst"),
+        ("Cybersecurity Trainee", "Cybersecurity Trainee"),
+        ("Cyber Analyst", "0-2 years experience"),
+        ("Young Graduate Program", "Young Graduate Program"),
+        ("", ""),
+        ("A senatorial role in IT", "A senatorial role in IT"),
     ],
 )
-def test_detect_seniority_passes(profile, text):
-    matches = detect_seniority(text, profile)
+def test_detect_seniority_passes(profile, title, full_text):
+    matches = detect_seniority(title, full_text, profile)
     assert matches == []
+
+
+@pytest.mark.parametrize(
+    "title,full_text",
+    [
+        # Le mot "lead" / "manager" / "senior" / "principal" apparaît UNIQUEMENT
+        # dans la description (verbe ou usage transverse) → ne doit PAS rejeter.
+        # Régression : itsme "Cyber Threat Intelligence Analyst" rejetée à tort
+        # parce que la description disait "people lead their digital lives".
+        ("Cyber Threat Intelligence Analyst",
+         "itsme has fundamentally changed how people lead their digital lives in Belgium."),
+        ("SOC Analyst",
+         "You will use a package manager like apt or yum."),
+        ("Detection Engineer",
+         "Senior management endorsement of the security strategy."),
+        ("Security Consultant",
+         "Working alongside the principal architects of the cloud platform."),
+    ],
+)
+def test_detect_seniority_ignores_description_only_keywords(profile, title, full_text):
+    """Patterns senior/lead/manager/principal ne s'appliquent qu'au titre."""
+    matches = detect_seniority(title, full_text, profile)
+    senior_matches = [m for m in matches if m[0] is RejectReason.SENIOR_REQUIRED]
+    assert senior_matches == [], (
+        f"Faux positif : {senior_matches} pour titre={title!r}"
+    )
+
+
+@pytest.mark.parametrize(
+    "title",
+    [
+        "Junior Cyber Lead Program",
+        "Cybersecurity Internship 2026",
+        "Cybersecurity Trainee — SOC team lead reporting line",
+        "Young Graduate Security Manager track",
+        "Stagiaire Cybersécurité",
+        "Alternance Cyber",
+    ],
+)
+def test_detect_seniority_bypasses_when_title_says_junior(profile, title):
+    """Titre junior/intern/trainee/graduate → ignore les patterns de niveau."""
+    matches = detect_seniority(title, title, profile)
+    senior_matches = [m for m in matches if m[0] is RejectReason.SENIOR_REQUIRED]
+    assert senior_matches == [], (
+        f"Bypass junior raté : {senior_matches} pour titre={title!r}"
+    )
+
+
+@pytest.mark.parametrize(
+    "title,full_text",
+    [
+        # 5+ years reste un signal d'expérience même sur un titre junior
+        ("Junior Cyber Analyst", "We require 5+ years of SOC experience."),
+        ("Cybersecurity Intern", "Minimum 5 years in incident response."),
+    ],
+)
+def test_detect_seniority_junior_bypass_does_not_skip_5years(profile, title, full_text):
+    """Bypass junior n'affecte PAS les patterns d'expérience (5+ years…)."""
+    matches = detect_seniority(title, full_text, profile)
+    exp_matches = [m for m in matches if m[0] is RejectReason.EXPERIENCE_5Y]
+    assert exp_matches, "5+ years aurait dû matcher malgré le bypass junior"
+
+
+# ─── Whitelist cyber pure-players ────────────────────────────────────────
+
+
+def test_cyber_pureplayer_whitelist_bypasses_relevance_gate(profile):
+    """Les offres NVISO passent le gate même sans keyword cyber dans titre/desc."""
+    from src.filters import detect_not_cyber_relevance
+
+    job = _make_job(
+        title="Talent Acquisition Specialist",
+        description="We are looking for someone passionate about people.",
+        company="NVISO",
+    )
+    not_cyber, _ = detect_not_cyber_relevance(job, profile)
+    assert not_cyber is False
+
+
+def test_non_pureplayer_cyber_company_still_subject_to_gate(profile):
+    """Cream / Orange Cyberdefense ne sont PAS dans la whitelist (branches non-cyber)."""
+    from src.filters import detect_not_cyber_relevance
+
+    for company in ("Cream by Audensiel", "Orange Cyberdefense"):
+        job = _make_job(
+            title="Sales Manager",
+            description="We are looking for a sales manager.",
+            company=company,
+        )
+        not_cyber, _ = detect_not_cyber_relevance(job, profile)
+        assert not_cyber is True, f"{company} ne doit PAS être whitelisté"
+
+
+def test_non_pureplayer_company_still_subject_to_gate(profile):
+    """Une société non-whitelist sans keyword cyber est toujours rejetée."""
+    from src.filters import detect_not_cyber_relevance
+
+    job = _make_job(
+        title="Talent Acquisition Specialist",
+        description="We are looking for someone passionate about people.",
+        company="Random ESN BE",
+    )
+    not_cyber, _ = detect_not_cyber_relevance(job, profile)
+    assert not_cyber is True
+
+
+def test_pureplayer_match_is_substring_insensitive(profile):
+    """'NVISO Belgium SA' doit aussi matcher la whitelist."""
+    from src.filters import detect_not_cyber_relevance
+
+    for company in ("NVISO", "NVISO Belgium SA", "nviso"):
+        job = _make_job(
+            title="Office Manager",
+            description="Coffee and good vibes.",
+            company=company,
+        )
+        not_cyber, _ = detect_not_cyber_relevance(job, profile)
+        assert not_cyber is False, f"{company} devait matcher la whitelist"
 
 
 # ─── detect_dutch_requirement ────────────────────────────────────────────

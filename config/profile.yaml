@@ -620,9 +620,12 @@ education:
   master_mandatory_penalty: -20
   bachelor_required_penalty: -5
   master_mandatory_patterns:
-    - "master.*(required|mandatory|must)"
+    # `.{0,150}` au lieu de `.*` pour éviter les faux positifs sur les longues
+    # descriptions où "master" et "required" apparaissent dans des contextes
+    # différents (ex. "master your skills" + 800 chars + "experience required").
+    - "master.{0,150}(required|mandatory|must)"
     - "msc\\s+(required|mandatory)"
-    - "(required|mandatory).*master"
+    - "(required|mandatory).{0,150}master"
   bachelor_required_patterns:
     - "bachelor.*(required|mandatory)"
     - "bsc\\s+(required|mandatory)"
