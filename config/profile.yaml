@@ -88,9 +88,64 @@ target_titles:
   - Responsable Cybersécurité
   - Chargé de Sécurité
   - Spécialiste Sécurité
+  - Spécialiste Cybersécurité
   - Expert Sécurité
   - Expert Cybersécurité
   - Conseiller Sécurité
+  - Délégué à la protection des données
+  - Référent Sécurité
+  - Pilote Sécurité
+  - Pentesteur
+  - DPO  # Data Protection Officer (acronyme courant en FR)
+  # Renforts EN (postes IT Security / DevSecOps / Privacy)
+  - IT Security
+  - IT Security Consultant
+  - IT Security Engineer
+  - IT Security Analyst
+  - IT Security Officer
+  - Information Security Analyst
+  - Information Security Engineer
+  - Information Security Consultant
+  - Security Operations Analyst
+  - Security Operations Engineer
+  - SOC Engineer
+  - DevSecOps
+  - DevSecOps Engineer
+  - DevSecOps Consultant
+  - Data Protection Officer
+  - Privacy Engineer
+  - Privacy Officer
+  - Privacy Analyst
+  - Privacy Consultant
+  - Cyber Risk Analyst
+  - Cyber Risk Consultant
+  # Variantes néerlandophones (Flandre, offres BE bilingues)
+  - Veiligheidsadviseur
+  - Beveiligingsadviseur
+  - Cybersecurity adviseur
+  - Cyberveiligheidsadviseur
+  - Beveiligingsanalist
+  - Cybersecurity analist
+  - Cybersecurityanalist
+  - Beveiligingsexpert
+  - Beveiligingsspecialist
+  - Beveiligingsingenieur
+  - Beveiligingsarchitect
+  - Beveiligingsconsultant
+  - Cybersecurity consultant
+  - Cybersecurity ingenieur
+  - Cyberveiligheidsingenieur
+  - Informatieveiligheid
+  - Informatiebeveiliging
+  - IT-beveiliging
+  - IT-beveiligingsadviseur
+  - IT-beveiligingsexpert
+  - Netwerkbeveiliging
+  - Privacy adviseur
+  - Privacy expert
+  - Functionaris voor gegevensbescherming
+  - Risicoanalist
+  - Compliance adviseur
 
 # ── Niveau (junior bonus +15 dans description) ──
 junior_keywords:
@@ -184,6 +239,36 @@ technical_keywords:
     - digital investigation
     - police judiciaire fédérale
     - cyber investigation
+    # Concepts & frameworks (NL — Flandre, offres BE bilingues)
+    - bedreigingsdetectie
+    - dreigingsdetectie
+    - dreigingsinformatie
+    - bedreigingsanalyse
+    - dreigingsanalyse
+    - incidentrespons
+    - incident respons
+    - incidentbeheer
+    - veiligheidsincidenten
+    - beveiligingsincidenten
+    - veiligheidsmonitoring
+    - beveiligingsmonitoring
+    - forensisch onderzoek
+    - digitaal forensisch onderzoek
+    - digitale forensiek
+    - geheugenforensiek
+    - netwerkforensiek
+    - malware-analyse
+    - malware analyse
+    - cyberdreigingen
+    - cyberdreiging
+    - dreigingsinlichtingen
+    - blauw team
+    - paars team
+    - cyberonderzoek
+    - cybercriminaliteit
+    - computercriminaliteit
+    - digitaal onderzoek
+    - federale gerechtelijke politie
   offensive:
     # Outils
     - metasploit
@@ -231,6 +316,23 @@ technical_keywords:
     - gestion de vulnérabilités
     - vulnérabilité management
     - escalade de privilèges
+    # Concepts & techniques (NL)
+    - penetratietest
+    - penetratietesten
+    - penetratietesting
+    - ethisch hacken
+    - ethische hacker
+    - kwetsbaarheidsanalyse
+    - kwetsbaarheidsbeoordeling
+    - kwetsbaarhedenbeheer
+    - beveiligingsaudit
+    - veiligheidsaudit
+    - rood team
+    - sociale manipulatie
+    - phishingsimulatie
+    - reverse-engineering
+    - rechtenescalatie
+    - laterale beweging
   scripting:
     - python
     - bash
@@ -305,6 +407,27 @@ technical_keywords:
     - gouvernance sécurité
     - politique de sécurité
     - smsi  # Système de Management de la Sécurité de l'Information
+    # Activités (NL)
+    - risicoanalyse
+    - risicobeoordeling
+    - risicobeheer
+    - risk-assessment
+    - gegevensbescherming
+    - privacybescherming
+    - bescherming persoonsgegevens
+    - naleving
+    - regelgevingsnaleving
+    - nalevingsverplichtingen
+    - veiligheidsbeleid
+    - beveiligingsbeleid
+    - informatieveiligheidsbeleid
+    - beleidskader
+    - veiligheidsgovernance
+    - beveiligingsgovernance
+    - audit informatiebeveiliging
+    - veiligheidsaudit  # déjà offensive mais pertinent ici aussi (multi-cat OK car all_flat dédupe)
+    - gegevensinbreuk
+    - inbreuk in verband met persoonsgegevens
   siem_tools:
     # SIEM/SOC
     - siem
@@ -362,6 +485,53 @@ technical_keywords:
     - menaces cyber
     - rançongiciel
     - logiciel malveillant
+    # Concepts généraux cyber (NL)
+    - cyberveiligheid
+    - cyberbeveiliging
+    - cyber-beveiliging
+    - cyber beveiliging
+    - cybersecurity  # idem EN, repris en NL aussi
+    - informatieveiligheid  # déjà titles, repris ici pour le gate
+    - informatiebeveiliging
+    - gegevensbeveiliging
+    - netwerkbeveiliging
+    - systeembeveiliging
+    - eindpuntbeveiliging
+    - cyberaanval
+    - cyberaanvallen
+    - cyberbedreiging
+    - cyberbedreigingen
+    - gijzelsoftware
+    - gegevenslek
+    - datalek
+    - kwaadaardige software
+    - schadelijke software
+    - sleutelbeheer
+    - cryptografie
+    - encryptie
+    # Renforts EN (DevSecOps, IAM, modern stack)
+    - devsecops
+    - sast
+    - dast
+    - iast
+    - sca  # Software Composition Analysis
+    - secrets management
+    - secret scanning
+    - vault
+    - hashicorp vault
+    - container security
+    - kubernetes security
+    - cloud security posture management
+    - cspm
+    - cnapp
+    - data loss prevention
+    - dlp
+    - casb
+    - sase
+    - zero trust network access
+    - ztna
+    - privileged access management
+    - pam
 
 # ── Localisations pondérées ──
 locations:
