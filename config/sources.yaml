@@ -167,6 +167,16 @@ sources:
     rate_limit_seconds: 3
     notes: "Next.js _next/data API. Le scraper extrait dynamiquement le buildId depuis __NEXT_DATA__ pour suivre les déploiements EPAM."
 
+  toreon:
+    enabled: true
+    type: html
+    base_url: "https://www.toreon.com/jobs/"
+    company_name_override: "Toreon"
+    country_default: BE
+    max_pages: 1  # ~7 offres actives sur la page listing
+    rate_limit_seconds: 3
+    notes: "Pure-player cyber consulting BE (Antwerp HQ). HTML statique + enrichissement description via .job-description sur les pages détail."
+
 # ─── Sprint 2+ — planifiés (désactivés) ────────────────────────────────
 planned_sources:
 

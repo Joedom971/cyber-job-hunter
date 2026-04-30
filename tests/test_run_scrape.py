@@ -32,7 +32,7 @@ def test_registry_contains_all_active_sources():
     expected = {"remotive", "nviso", "itsme", "easi", "smals", "cream",
                 "travaillerpour", "actiris", "accenture", "kpmg",
                 "capgemini", "orange_cyberdefense", "devoteam", "sopra_steria",
-                "nexova", "epam"}
+                "nexova", "epam", "toreon"}
     assert set(SCRAPER_FACTORIES.keys()) == expected
 
 
@@ -144,6 +144,9 @@ def test_run_scrape_full_e2e(tmp_path: Path):
     )
     respx.get("https://careers.epam.com/_next/data/test-build/en/jobs/belgium.json").mock(
         return_value=httpx.Response(200, json={"pageProps": {"jobs": {"jobs": [], "total": 0}}})
+    )
+    respx.get("https://www.toreon.com/jobs/").mock(
+        return_value=httpx.Response(200, text="<html></html>")
     )
 
     db_path = tmp_path / "e2e.db"

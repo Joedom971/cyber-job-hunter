@@ -42,6 +42,7 @@ class JobSource(StrEnum):
     SOPRA_STERIA = "sopra_steria"
     NEXOVA = "nexova"
     EPAM = "epam"
+    TOREON = "toreon"
     # Étendu en Sprint 3+
     OTHER = "other"
 

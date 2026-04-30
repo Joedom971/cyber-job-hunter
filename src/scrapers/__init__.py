@@ -24,6 +24,7 @@ from src.scrapers.recruitee import build_itsme_scraper
 from src.scrapers.remotive import RemotiveScraper
 from src.scrapers.smals import SmalsScraper
 from src.scrapers.sopra_steria import SopraSteriaScraper
+from src.scrapers.toreon import ToreonScraper
 from src.scrapers.travaillerpour import TravaillerPourScraper
 from src.scrapers.workday import build_accenture_scraper
 
@@ -46,6 +47,7 @@ SCRAPER_FACTORIES: dict[str, ScraperFactory] = {
     "sopra_steria": SopraSteriaScraper,         # Sprint 3 — Attrax HTML + JSON-LD JobPosting
     "nexova": NexovaScraper,                    # Sprint 3 — pure-player cyber/défense BE (ESA Redu)
     "epam": EpamScraper,                        # Sprint 3 — Next.js _next/data API (BE filtered)
+    "toreon": ToreonScraper,                    # Sprint 3 — pure-player cyber consulting BE (Antwerp)
 }
 
 
