@@ -32,7 +32,7 @@ def test_registry_contains_all_active_sources():
     expected = {"remotive", "nviso", "itsme", "easi", "smals", "cream",
                 "travaillerpour", "actiris", "accenture", "kpmg",
                 "capgemini", "orange_cyberdefense", "devoteam", "sopra_steria",
-                "nexova"}
+                "nexova", "epam"}
     assert set(SCRAPER_FACTORIES.keys()) == expected
 
 
@@ -134,6 +134,16 @@ def test_run_scrape_full_e2e(tmp_path: Path):
     )
     respx.get("https://www.nexovagroup.eu/en/job-vacancies").mock(
         return_value=httpx.Response(200, text="<html></html>")
+    )
+    respx.get("https://careers.epam.com/en/jobs/belgium").mock(
+        return_value=httpx.Response(
+            200,
+            text='<script id="__NEXT_DATA__" type="application/json">'
+                 '{"buildId":"test-build"}</script>',
+        )
+    )
+    respx.get("https://careers.epam.com/_next/data/test-build/en/jobs/belgium.json").mock(
+        return_value=httpx.Response(200, json={"pageProps": {"jobs": {"jobs": [], "total": 0}}})
     )
 
     db_path = tmp_path / "e2e.db"

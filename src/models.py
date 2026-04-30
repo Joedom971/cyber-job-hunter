@@ -41,6 +41,7 @@ class JobSource(StrEnum):
     DEVOTEAM = "devoteam"
     SOPRA_STERIA = "sopra_steria"
     NEXOVA = "nexova"
+    EPAM = "epam"
     # Étendu en Sprint 3+
     OTHER = "other"
 
