@@ -137,6 +137,16 @@ sources:
     rate_limit_seconds: 3
     notes: "Google Cloud Talent Solution API. Filtre BE via param country=Belgium. Auth Basic publique."
 
+  sopra_steria:
+    enabled: true
+    type: html
+    base_url: "https://careers.soprasteria.be/"
+    company_name_override: "Sopra Steria Belgium"
+    country_default: BE
+    max_pages: 1  # homepage SSR contient ~30 offres BE pré-filtrées
+    rate_limit_seconds: 3
+    notes: "Attrax (Lumesse) HTML + JSON-LD JobPosting sur chaque détail. Sopra Steria global utilise Attrax aussi mais le subdomain .be filtre déjà BE."
+
 # ─── Sprint 2+ — planifiés (désactivés) ────────────────────────────────
 planned_sources:
 

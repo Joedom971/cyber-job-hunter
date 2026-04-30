@@ -21,6 +21,7 @@ from src.scrapers.nviso import NvisoScraper
 from src.scrapers.recruitee import build_itsme_scraper
 from src.scrapers.remotive import RemotiveScraper
 from src.scrapers.smals import SmalsScraper
+from src.scrapers.sopra_steria import SopraSteriaScraper
 from src.scrapers.travaillerpour import TravaillerPourScraper
 from src.scrapers.workday import build_accenture_scraper
 
@@ -40,6 +41,7 @@ SCRAPER_FACTORIES: dict[str, ScraperFactory] = {
     "capgemini": CapgeminiScraper,              # Sprint 2+ — API custom Azure (BE filtered)
     "orange_cyberdefense": OrangeCyberdefenseScraper,  # Sprint 2+ — TeamTailor HTML
     "devoteam": DevoteamScraper,                # Sprint 2+ — HTML listing multi-pays (FR/BE/LU)
+    "sopra_steria": SopraSteriaScraper,         # Sprint 3 — Attrax HTML + JSON-LD JobPosting
 }
 
 

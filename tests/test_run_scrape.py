@@ -31,7 +31,7 @@ def no_sleep(monkeypatch):
 def test_registry_contains_all_active_sources():
     expected = {"remotive", "nviso", "itsme", "easi", "smals", "cream",
                 "travaillerpour", "actiris", "accenture", "kpmg",
-                "capgemini", "orange_cyberdefense", "devoteam"}
+                "capgemini", "orange_cyberdefense", "devoteam", "sopra_steria"}
     assert set(SCRAPER_FACTORIES.keys()) == expected
 
 
@@ -127,6 +127,9 @@ def test_run_scrape_full_e2e(tmp_path: Path):
     )
     respx.get("https://europe-west1-dsi-careers.cloudfunctions.net/careers-api/v1.1").mock(
         return_value=httpx.Response(200, json={"totalSize": 0, "matchingJobs": []})
+    )
+    respx.get("https://careers.soprasteria.be/").mock(
+        return_value=httpx.Response(200, text="<html></html>")
     )
 
     db_path = tmp_path / "e2e.db"
