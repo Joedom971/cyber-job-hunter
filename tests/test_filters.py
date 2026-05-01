@@ -144,16 +144,17 @@ def test_detect_seniority_junior_bypass_does_not_skip_5years(profile, title, ful
 
 
 def test_cyber_pureplayer_whitelist_bypasses_relevance_gate(profile):
-    """Les offres NVISO passent le gate même sans keyword cyber dans titre/desc."""
+    """Les offres NVISO/ENISA passent le gate même sans keyword cyber dans titre/desc."""
     from src.filters import detect_not_cyber_relevance
 
-    job = _make_job(
-        title="Talent Acquisition Specialist",
-        description="We are looking for someone passionate about people.",
-        company="NVISO",
-    )
-    not_cyber, _ = detect_not_cyber_relevance(job, profile)
-    assert not_cyber is False
+    for company in ("NVISO", "ENISA"):
+        job = _make_job(
+            title="Talent Acquisition Specialist",
+            description="We are looking for someone passionate about people.",
+            company=company,
+        )
+        not_cyber, _ = detect_not_cyber_relevance(job, profile)
+        assert not_cyber is False, f"{company} devait passer le gate (whitelist)"
 
 
 def test_non_pureplayer_cyber_company_still_subject_to_gate(profile):
@@ -184,10 +185,10 @@ def test_non_pureplayer_company_still_subject_to_gate(profile):
 
 
 def test_pureplayer_match_is_substring_insensitive(profile):
-    """'NVISO Belgium SA' doit aussi matcher la whitelist."""
+    """'NVISO Belgium SA' / 'ENISA HQ Athens' doivent matcher la whitelist."""
     from src.filters import detect_not_cyber_relevance
 
-    for company in ("NVISO", "NVISO Belgium SA", "nviso"):
+    for company in ("NVISO", "NVISO Belgium SA", "nviso", "ENISA", "ENISA HQ"):
         job = _make_job(
             title="Office Manager",
             description="Coffee and good vibes.",

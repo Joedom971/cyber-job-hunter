@@ -15,6 +15,7 @@ from src.scrapers.capgemini import CapgeminiScraper
 from src.scrapers.cream import CreamScraper
 from src.scrapers.devoteam import DevoteamScraper
 from src.scrapers.easi import EasiScraper
+from src.scrapers.enisa import EnisaScraper
 from src.scrapers.epam import EpamScraper
 from src.scrapers.kpmg import KpmgScraper
 from src.scrapers.nexova import NexovaScraper
@@ -48,6 +49,7 @@ SCRAPER_FACTORIES: dict[str, ScraperFactory] = {
     "nexova": NexovaScraper,                    # Sprint 3 — pure-player cyber/défense BE (ESA Redu)
     "epam": EpamScraper,                        # Sprint 3 — Next.js _next/data API (BE filtered)
     "toreon": ToreonScraper,                    # Sprint 3 — pure-player cyber consulting BE (Antwerp)
+    "enisa": EnisaScraper,                      # Sprint 3 — agence cyber UE (Athens HQ + Brussels office)
 }
 
 

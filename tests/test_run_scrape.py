@@ -32,7 +32,7 @@ def test_registry_contains_all_active_sources():
     expected = {"remotive", "nviso", "itsme", "easi", "smals", "cream",
                 "travaillerpour", "actiris", "accenture", "kpmg",
                 "capgemini", "orange_cyberdefense", "devoteam", "sopra_steria",
-                "nexova", "epam", "toreon"}
+                "nexova", "epam", "toreon", "enisa"}
     assert set(SCRAPER_FACTORIES.keys()) == expected
 
 
@@ -146,6 +146,9 @@ def test_run_scrape_full_e2e(tmp_path: Path):
         return_value=httpx.Response(200, json={"pageProps": {"jobs": {"jobs": [], "total": 0}}})
     )
     respx.get("https://www.toreon.com/jobs/").mock(
+        return_value=httpx.Response(200, text="<html></html>")
+    )
+    respx.get("https://www.enisa.europa.eu/careers").mock(
         return_value=httpx.Response(200, text="<html></html>")
     )
 

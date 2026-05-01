@@ -177,6 +177,16 @@ sources:
     rate_limit_seconds: 3
     notes: "Pure-player cyber consulting BE (Antwerp HQ). HTML statique + enrichissement description via .job-description sur les pages détail."
 
+  enisa:
+    enabled: true
+    type: html
+    base_url: "https://www.enisa.europa.eu/careers"
+    company_name_override: "ENISA"
+    country_default: OTHER
+    max_pages: 1  # ~10 vacancies actives, toutes sur 1 page
+    rate_limit_seconds: 3
+    notes: "Agence européenne cybersécurité. HQ Athens, bureau Brussels. Pages /recruitment/vacancies/{slug}. Reclassement BE si description mentionne Brussels/Belgium."
+
 # ─── Sprint 2+ — planifiés (désactivés) ────────────────────────────────
 planned_sources:
 

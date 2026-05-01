@@ -87,11 +87,13 @@ def detect_dutch_requirement(text: str, profile: Profile) -> tuple[bool, str | N
 # d'ESN généraliste (Capgemini, Devoteam) qui ont aussi des offres
 # banking/dev/data sans rapport.
 _CYBER_PUREPLAYER_COMPANIES: tuple[str, ...] = (
-    # NVISO uniquement : pure-player BE sans branche IT/sales/admin.
-    # Cream & Orange Cyberdefense exclus car ils ont des fonctions support
-    # (.NET dev, sales, réceptionniste) qui ne devraient pas bypasser le gate.
-    # Ajoutera Toreon, Approach, Spotit quand on aura les scrapers.
+    # NVISO : pure-player BE sans branche IT/sales/admin.
     "nviso",
+    # ENISA : European Union Agency for Cybersecurity. Toutes les vacancies
+    # (incl. traineeships, "various IT profiles", SNE) ont un contexte cyber
+    # implicite par la mission de l'agence. Le bruit éventuel (HR, Budget)
+    # est filtré naturellement par min_score (scoring très bas sans keywords).
+    "enisa",
 )
 
 
