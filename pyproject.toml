@@ -19,8 +19,8 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/Joedom971/cyber-job-hunter"
-Issues  = "https://github.com/Joedom971/cyber-job-hunter/issues"
+Homepage = "https://github.com/Jhatchi/cyber-job-hunter"
+Issues  = "https://github.com/Jhatchi/cyber-job-hunter/issues"
 
 [build-system]
 requires = ["setuptools>=68", "wheel"]

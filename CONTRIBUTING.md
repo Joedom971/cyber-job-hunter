@@ -5,11 +5,11 @@ Projet personnel mais les issues / PRs / suggestions sont les bienvenues. Quelqu
 ## Setup local
 
 ```bash
-git clone https://github.com/Joedom971/cyber-job-hunter.git
+git clone https://github.com/Jhatchi/cyber-job-hunter.git
 cd cyber-job-hunter
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-pytest  # vérifie que tout passe (268 tests)
+pytest  # vérifie que tout passe (357 tests)
 ```
 
 ## Conventions

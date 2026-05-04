@@ -4,11 +4,11 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)](pyproject.toml)
-[![Tests](https://img.shields.io/badge/tests-307%20passing-brightgreen.svg)](tests/)
-[![Coverage](https://img.shields.io/badge/coverage-91%25-brightgreen.svg)](tests/)
+[![Tests](https://img.shields.io/badge/tests-357%20passing-brightgreen.svg)](tests/)
+[![Coverage](https://img.shields.io/badge/coverage-89%25-brightgreen.svg)](tests/)
 [![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-black.svg)](pyproject.toml)
 [![Type-checked: mypy strict](https://img.shields.io/badge/type--checked-mypy%20strict-blue.svg)](pyproject.toml)
-[![Status](https://img.shields.io/badge/status-Sprint%202%20%E2%9C%85-success)](#-roadmap)
+[![Status](https://img.shields.io/badge/status-Sprint%203%20%F0%9F%9F%A0-orange)](#-roadmap)
 
 ---
 
@@ -205,7 +205,7 @@ Le **cyber relevance gate** garantit que le top du dashboard n'est pas pollué p
 
 ```bash
 # 1. Cloner
-git clone https://github.com/Joedom971/cyber-job-hunter.git
+git clone https://github.com/Jhatchi/cyber-job-hunter.git
 cd cyber-job-hunter
 
 # 2. Setup Python (3.11+)
